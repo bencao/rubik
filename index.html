@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Solving the 3×3 Cube, Layer by Layer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#EEF1F5; --panel:#FFFFFF; --ink:#16213A; --muted:#5A6478; --line:#D5DAE3;
+  --key:#FFFFFF; --keyedge:#B9C1CF;
+  --Y:#FFD23F; --W:#FFFFFF; --B:#1F5BFF; --R:#E5352B; --G:#18A35A; --O:#FF8A1E;
+  --X:#737B8C; --Xl:#D9DDE4; --lit:#FFFFFF; --dim:#646C7C; --arrow:#16213A; --stroke:#16213A;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --lit:#F2F5FA; --dim:#4A5266; --arrow:#FFD23F;
+    --bg:#121826; --panel:#1B2335; --ink:#E9EDF5; --muted:#A3ADC2; --line:#2E3850;
+    --key:#26304A; --keyedge:#0B1020; --X:#5B6478; --Xl:#3A4357; --stroke:#0B1020;
+  }
+}
+:root[data-theme="dark"]{
+    --lit:#F2F5FA; --dim:#4A5266; --arrow:#FFD23F;
+  --bg:#121826; --panel:#1B2335; --ink:#E9EDF5; --muted:#A3ADC2; --line:#2E3850;
+  --key:#26304A; --keyedge:#0B1020; --X:#5B6478; --Xl:#3A4357; --stroke:#0B1020;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1.0625rem;line-height:1.6}
+.wrap{max-width:960px;margin:0 auto;padding:0 20px}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--B);outline-offset:3px;border-radius:4px}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1.25fr 1fr;gap:32px;align-items:center;padding:56px 0 24px}
+.hero h1{font-family:var(--display);font-weight:800;font-size:clamp(2.4rem,6vw,4.1rem);line-height:.98;letter-spacing:-.025em;margin:0 0 18px}
+.hero p{margin:0 0 10px;max-width:34em;color:var(--muted)}
+.hero p.src{font-size:.92rem}
+.hero .cube{justify-self:center;width:min(300px,80%)}
+@media (max-width:720px){.hero{grid-template-columns:1fr;padding-top:36px}.hero .cube{order:-1;width:170px;justify-self:start}}
+
+/* Stage rail */
+.rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.rail ol{list-style:none;margin:0 auto;padding:8px 20px;max-width:960px;display:flex;gap:6px;overflow-x:auto}
+.rail a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;min-width:84px;padding:6px 4px;border-radius:10px;font-size:.78rem;color:var(--muted);text-align:center;line-height:1.2}
+.rail a:hover{background:var(--panel);color:var(--ink)}
+.rail a.on{background:var(--panel);color:var(--ink);font-weight:700}
+
+/* Sections */
+section{padding:44px 0 8px}
+h2{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,3.6vw,2.2rem);letter-spacing:-.015em;line-height:1.1;margin:0 0 12px}
+h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
+.lead{max-width:40em;margin:0 0 20px}
+.muted{color:var(--muted)}
+
+.stephead{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;margin-bottom:12px}
+.stephead .num{font-family:var(--display);font-weight:800;font-size:3.4rem;line-height:1;color:var(--B);font-variant-numeric:tabular-nums}
+.stephead .zh{font-size:.95rem;color:var(--muted);margin:0}
+
+/* Notation */
+.moves{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px;margin:8px 0 18px}
+.move{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;gap:14px;align-items:center}
+.move b{display:block;font-family:var(--display);font-size:1rem}
+.move > div span{font-size:.92rem;color:var(--muted);line-height:1.35;display:block}
+.mods{display:flex;flex-wrap:wrap;gap:22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.mods div{display:flex;gap:10px;align-items:center}
+
+/* Keycaps — the signature element */
+.alg{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 14px;margin:10px 0 4px}
+.grp{display:flex;flex-wrap:wrap;gap:8px 5px;padding:5px 7px 7px;border-radius:12px;background:color-mix(in srgb,var(--B) 9%,transparent)}
+.grp.solo{background:none;padding:5px 0 7px}
+.k{position:relative;display:inline-flex;align-items:center;justify-content:center;min-width:42px;height:46px;padding:0 8px;border-radius:9px;background:var(--key);border:1.5px solid var(--keyedge);box-shadow:0 4px 0 var(--keyedge);font-family:var(--display);font-weight:800;font-size:1.3rem;line-height:1;color:var(--ink)}
+.k sup{font-size:.95rem;font-weight:800;margin-left:1px;align-self:flex-start;margin-top:.35em;line-height:1;color:var(--R)}
+.k.two sup{color:var(--B)}
+.k.sm{min-width:34px;height:38px;font-size:1.1rem}
+.copy{font:inherit;font-size:.85rem;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;margin-left:2px;align-self:center}
+.copy:hover{color:var(--ink);border-color:var(--ink)}
+
+/* Case cards */
+.cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px}
+.case.wide{grid-column:1/-1}
+.case .row{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+.case svg.top{width:96px;height:96px;flex:none}
+.case p{margin:0 0 4px;font-size:.98rem}
+.tip{font-size:.92rem;color:var(--muted);margin-top:6px}
+.note{border-left:4px solid var(--Y);background:var(--panel);padding:12px 16px;border-radius:0 10px 10px 0;margin:16px 0;max-width:46em;font-size:.97rem}
+.combo{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.combo .case{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px}
+.combo .k{min-width:auto}
+.chip{display:inline-block;font-weight:700;font-size:.9rem;padding:2px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
+
+.c3{width:100%;max-width:210px;aspect-ratio:1;margin:0 auto 6px;position:relative;touch-action:none;cursor:grab;user-select:none}
+.c3:active{cursor:grabbing}
+.c3 svg{width:100%;height:100%;display:block;overflow:visible}
+.case .row .c3{width:100%;margin:0 auto 6px}
+.combo .c3{max-width:170px}
+.case.wide > .c3{margin-left:0}
+.hero3{max-width:320px}
+.hint{text-align:center;font-size:.85rem;color:var(--muted);margin:4px 0 0}
+.turn{position:absolute;right:-4px;bottom:-4px;font:inherit;font-size:.78rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
+.turn:hover{color:var(--ink);border-color:var(--ink)}
+.rail .c3{width:40px;max-width:40px;margin:0;cursor:inherit;pointer-events:none}
+@media (max-width:720px){.hero .cube{width:220px}}
+
+.mv{display:inline-flex;flex-direction:column;align-items:center;gap:4px}
+.mv svg.mi{width:58px;height:58px;display:block}
+.alg .mv svg.mi{width:54px;height:54px}
+.alg[data-small] .mv svg.mi{width:46px;height:46px}
+.grp{align-items:flex-end}
+
+.combo{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.combo .case{align-items:stretch;text-align:left}
+.combo .alg,.case .alg{justify-content:flex-start}
+p.or{margin:6px 0 2px;color:var(--muted);font-size:.9rem}
+
+.goal{display:flex;gap:20px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--G);border-radius:14px;padding:14px 18px;margin:4px 0 22px;max-width:640px}
+.goal .c3{width:150px;max-width:150px;flex:none;margin:0}
+.goal p{margin:0}
+@media (max-width:520px){.goal{flex-direction:column;align-items:flex-start}}
+
+h3.part{font-size:1.3rem;margin:26px 0 12px}
+.rule{border-left:5px solid var(--O);background:var(--panel);padding:12px 16px;border-radius:0 10px 10px 0;margin:0 0 16px;max-width:640px}
+.row2{display:flex;gap:20px;align-items:center}
+.row2 .c3{width:170px;max-width:170px;flex:none;margin:0}
+.row2 p{margin:0 0 6px}
+@media (max-width:560px){.row2{flex-direction:column;align-items:flex-start}}
+
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--panel);margin:0 0 22px}
+.lang button{font:inherit;font-size:.9rem;border:0;background:none;color:var(--muted);padding:5px 14px;border-radius:999px;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--ink);color:var(--bg);font-weight:700}
+:lang(zh) h1{letter-spacing:0;line-height:1.15}
+:lang(zh) h2, :lang(zh) h3{letter-spacing:0}
+footer h3.ack{color:var(--ink);font-size:1.1rem;margin:0 0 6px}
+footer{padding:48px 0 64px;color:var(--muted);font-size:.92rem}
+footer p{max-width:44em}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div>
+      <div class="lang" role="group" aria-label="Language / 语言"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="zh" aria-pressed="false">中文</button></div>
+      <h1 data-i18n="t0">Solving the 3×3 cube, layer by layer</h1>
+    </div>
+    <div class="cube"><div class="c3 hero3" data-case="s7" data-tilt="30"></div><p class="hint" data-i18n="t1">Drag any cube to rotate it. Double-click to reset.</p></div>
+  </header>
+</div>
+
+<nav class="rail" aria-label="Stages">
+  <ol id="rail"></ol>
+</nav>
+
+<main class="wrap">
+
+<section id="notation">
+  <h2 data-i18n="t2">Reading the formulas</h2>
+  <p class="lead" data-i18n="t3">Each letter names a face. Turn it a quarter turn <strong>clockwise as if you were looking straight at that face</strong>. Keep white on the bottom and yellow on top; “front” faces you.</p>
+  <div class="moves" id="moveList"></div>
+  <div class="mods">
+    <div data-mod="R"><span data-i18n="t4">clockwise quarter turn</span></div>
+    <div data-mod="R'"><span data-i18n="t5">prime: counter-clockwise</span></div>
+    <div data-mod="R2"><span data-i18n="t6">half turn (either way)</span></div>
+  </div>
+</section>
+
+<section id="s1">
+  <div class="stephead"><div class="num">1</div><div><h2 data-i18n="t7">Bottom cross</h2><p class="zh" data-i18n="t8">底棱归位 · white cross</p></div></div>
+  <div class="goal"><div class="c3" data-case="s1" data-tilt="-32"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t10">White cross on the bottom. Each white edge's side color matches the center above it.</p></div></div>
+  
+  <h3 class="part" data-i18n="t11">Part 1: make a daisy</h3>
+  <div class="goal"><div class="c3" data-case="daisy" data-tilt="40"></div><div><h3 data-i18n="t12">Daisy</h3><p data-i18n="t13">Keep yellow on top. Bring all four white edges up around the yellow center, white facing up. Their other colors don't matter yet.</p></div></div>
+  <div class="rule" data-i18n="t14"><strong>Before every move:</strong> turn the top (U) until the top spot where the piece will land is empty, so you don't knock off a petal you already placed.</div>
+  <div class="cases">
+<div class="case"><div class="c3" data-case="d1" data-tilt="26"></div><h3 data-i18n="t15">Middle layer, right side, white facing front</h3><div class="alg" data-alg="R" data-small></div></div>
+<div class="case"><div class="c3" data-case="d2" data-tilt="26"></div><h3 data-i18n="t16">Middle layer, left side, white facing front</h3><div class="alg" data-alg="L'" data-small></div></div>
+<div class="case"><div class="c3" data-case="d3" data-tilt="26"></div><h3 data-i18n="t17">Middle layer, right side, white facing right</h3><div class="alg" data-alg="F'" data-small></div></div>
+<div class="case"><div class="c3" data-case="d4" data-tilt="26" data-ay="35"></div><h3 data-i18n="t18">Middle layer, left side, white facing left</h3><div class="alg" data-alg="F" data-small></div></div>
+<div class="case"><div class="c3" data-case="d5" data-tilt="-24"></div><h3 data-i18n="t19">Bottom layer, white facing down</h3><div class="alg" data-alg="F2" data-small></div></div>
+<div class="case"><div class="c3" data-case="d6" data-tilt="-24"></div><h3 data-i18n="t20">Bottom layer, white facing front</h3><div class="alg" data-alg="F L'" data-small></div></div>
+<div class="case"><div class="c3" data-case="d7" data-tilt="26"></div><h3 data-i18n="t21">Top layer, white facing front</h3><div class="alg" data-alg="F U' R" data-small></div></div>
+  </div>
+  <h3 class="part" data-i18n="t22">Part 2: turn the daisy into the cross</h3>
+  <div class="cases">
+    <div class="case wide"><div class="row2"><div class="c3" data-case="flip" data-tilt="30"></div><div><p data-i18n="t23">Turn the top (U) until a petal's side color matches the center below it. Hold that side as the front, then:</p><div class="alg" data-alg="F2" data-small></div><p data-i18n="t24">The white edge drops to the bottom. Do the same for all four petals, turning the whole cube (yellow stays on top) to bring each one to the front.</p></div></div></div>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="stephead"><div class="num">2</div><div><h2 data-i18n="t25">Bottom corners</h2><p class="zh" data-i18n="t26">底角归位 · finish the first layer</p></div></div>
+  <div class="goal"><div class="c3" data-case="s2" data-tilt="-32"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t27">Bottom layer complete. The white face is solved and the bottom row of every side matches its center.</p></div></div>
+  <p class="lead" data-i18n="t28">Find a corner with a white sticker in the top layer. Turn the top until that corner sits directly above the spot it belongs in (between its two colored centers), and hold the cube so that spot is at the <strong>front-right-bottom</strong>. Then pick the case:</p>
+  <div class="cases">
+    <div class="case"><div class="c3" data-case="b1" data-tilt="22"></div><h3 data-i18n="t29">White faces right</h3><div class="alg" data-alg="R U R'"></div></div>
+    <div class="case"><div class="c3" data-case="b2" data-tilt="22"></div><h3 data-i18n="t30">White faces front</h3><div class="alg" data-alg="F' U' F"></div></div>
+    <div class="case"><div class="c3" data-case="b3" data-tilt="22"></div><h3 data-i18n="t31">White faces up</h3><div class="alg" data-alg="(R U2 R') U' (R U R')"></div></div>
+    <div class="case"><div class="c3" data-case="b4" data-tilt="22"></div><h3 data-i18n="t32">Already in the slot, but twisted (white on right side)</h3><div class="alg" data-alg="(R U R') U' (R U R')"></div></div>
+    <div class="case"><div class="c3" data-case="b5" data-tilt="22"></div><h3 data-i18n="t33">Already in the slot, but twisted (white on front side)</h3><div class="alg" data-alg="(F' U' F) U (F' U' F)"></div></div>
+  </div>
+</section>
+
+<section id="s3">
+  <div class="stephead"><div class="num">3</div><div><h2 data-i18n="t34">Middle edges</h2><p class="zh" data-i18n="t35">中棱归位 · second layer</p></div></div>
+  <div class="goal"><div class="c3" data-case="s3" data-tilt="28"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t36">First two layers complete. Only the top layer is left.</p></div></div>
+  <p class="lead" data-i18n="t37">Find a top-layer edge with <strong>no yellow</strong> on it. Hold the cube so the edge's empty home slot is the <strong>front-right</strong> middle slot, then turn the top until the edge's side sticker matches a center:</p>
+  <div class="cases">
+    <div class="case"><div class="c3" data-case="m1" data-tilt="26"></div><h3 data-i18n="t38">Edge sits on the right side</h3><p data-i18n="t39">Its side sticker matches the <strong>right</strong> center; its top sticker is the front color.</p><div class="alg" data-alg="(U' F' U F) (U R U' R')"></div></div>
+    <div class="case"><div class="c3" data-case="m2" data-tilt="26"></div><h3 data-i18n="t40">Edge sits on the front side</h3><p data-i18n="t41">Its side sticker matches the <strong>front</strong> center; its top sticker is the right color.</p><div class="alg" data-alg="(U R U' R') (U' F' U F)"></div></div>
+    <div class="case wide"><div class="c3" data-case="m3" data-tilt="26"></div><h3 data-i18n="t42">Edge is already in its slot, but flipped</h3><div class="alg" data-alg="(U' F' U F U R U' R') U2 (U' F' U F U R U' R')" data-small></div><p class="or" data-i18n="t43">or</p><div class="alg" data-alg="(U R U' R' U' F' U F) U2 (U R U' R' U' F' U F)" data-small></div></div>
+  </div>
+</section>
+
+<section id="s4">
+  <div class="stephead"><div class="num">4</div><div><h2 data-i18n="t44">Yellow cross</h2><p class="zh" data-i18n="t45">顶棱面位 · orient the top edges</p></div></div>
+  <div class="goal"><div class="c3" data-case="s4" data-tilt="40"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t46">Yellow cross on top. The top corners don't matter yet.</p></div></div>
+  <p class="lead" data-i18n="t47">Now make the four top edges show yellow on top.</p>
+  <div class="alg" data-alg="F (R U R' U') F'"></div>
+  <p class="lead" style="margin-top:14px" data-i18n="t48">Hold the cube as shown:</p>
+  <div class="cases">
+    <div class="case"><div class="row"><div class="c3" data-case="line" data-tilt="40"></div><div><h3 data-i18n="t49">Line</h3><p data-i18n="t50">Horizontal, left to right.</p><div class="alg" data-alg="(F R U R' U' F')" data-small></div></div></div></div>
+    <div class="case"><div class="row"><div class="c3" data-case="L" data-tilt="40"></div><div><h3 data-i18n="t51">L-shape</h3><p data-i18n="t52">Pointing to the back and left.</p><div class="alg" data-alg="(F R U R' U' F') (F R U R' U' F')" data-small></div></div></div></div>
+    <div class="case"><div class="row"><div class="c3" data-case="dot" data-tilt="40"></div><div><h3 data-i18n="t53">Dot</h3><p data-i18n="t54">Only the center is yellow.</p><div class="alg" data-alg="(F R U R' U' F') (F R U R' U' F') U (F R U R' U' F')" data-small></div></div></div></div>
+  </div>
+</section>
+
+<section id="s5">
+  <div class="stephead"><div class="num">5</div><div><h2 data-i18n="t55">Yellow top</h2><p class="zh" data-i18n="t56">顶角面位 · orient the top corners</p></div></div>
+  <div class="goal"><div class="c3" data-case="s5" data-tilt="40"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t57">Whole top face yellow. The sides of the top layer can still be mixed up.</p></div></div>
+  <p class="lead" data-i18n="t58">Turn the top corners so the whole top face is yellow.</p>
+  <div class="cases">
+    <div class="case"><div class="row"><div class="c3" data-case="c51" data-tilt="40"></div><div><h3 data-i18n="t59">Case 1</h3><div class="alg" data-alg="R' U2 R U R' U R" data-small></div></div></div></div>
+    <div class="case"><div class="row"><div class="c3" data-case="c52" data-tilt="40"></div><div><h3 data-i18n="t60">Case 2</h3><div class="alg" data-alg="U' R U2 R' U' R U' R'" data-small></div></div></div></div>
+  </div>
+  <p class="lead" style="margin-top:22px" data-i18n="t61">Other patterns:</p>
+  <div class="combo">
+    <div class="case"><div class="c3" data-case="c501" data-tilt="40"></div><div class="alg" data-alg="(R' U2 R U R' U R) (U' R U2 R' U' R U' R')" data-small></div></div>
+    <div class="case"><div class="c3" data-case="c502" data-tilt="40"></div><div class="alg" data-alg="(U' R U2 R' U' R U' R') (R' U2 R U R' U R)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="c503" data-tilt="40"></div><div class="alg" data-alg="(U' R U2 R' U' R U' R') U2 (R' U2 R U R' U R)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="c504" data-tilt="40"></div><div class="alg" data-alg="(R' U2 R U R' U R) U' (R' U2 R U R' U R)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="c505" data-tilt="40"></div><div class="alg" data-alg="(R' U2 R U R' U R) (R' U2 R U R' U R)" data-small></div></div>
+  </div>
+</section>
+
+<section id="s6">
+  <div class="stephead"><div class="num">6</div><div><h2 data-i18n="t62">Top corners into place</h2><p class="zh" data-i18n="t63">顶角归位 · permute the corners</p></div></div>
+  <div class="goal"><div class="c3" data-case="s6" data-tilt="40"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t64">All four top corners in their correct places. Only the top edges are left.</p></div></div>
+  <p class="lead" data-i18n="t65">Look around the sides of the top layer for two corners on the same side that share a color (“headlights”).</p>
+  <div class="cases">
+    <div class="case wide"><div class="row"><div class="c3" data-case="p6" data-tilt="40"></div><div><h3 data-i18n="t66">Headlights found</h3><p data-i18n="t67">Turn the top so the matching pair faces <strong>you</strong> (front), then:</p><div class="alg" data-alg="R B' R F2 R' B R F2 R2"></div></div></div></div>
+    <div class="case wide"><h3 data-i18n="t68">No headlights anywhere</h3><p data-i18n="t69">From any angle:</p><div class="alg" data-alg="R B' R F2 R' B R F2 R2" data-small></div><p data-i18n="t70">Headlights will appear; then use the case above.</p></div>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="stephead"><div class="num">7</div><div><h2 data-i18n="t71">Top edges into place</h2><p class="zh" data-i18n="t72">顶棱归位 · finish</p></div></div>
+  <div class="goal"><div class="c3" data-case="s7" data-tilt="30"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t73">Solved. Every face is one color.</p></div></div>
+  <p class="lead" data-i18n="t74">Only the top edges are left. If one side is already fully solved, hold it at the <strong>back</strong>.</p>
+  <div class="combo" style="margin-top:18px">
+    <div class="case"><div class="c3" data-case="p7" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="p701" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2) (R U' R U R U R U' R' U' R2)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="p702" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2) U (R U' R U R U R U' R' U' R2)" data-small></div></div>
+    <div class="case"><div class="c3" data-case="p703" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2) U' (R U' R U R U R U' R' U' R2)" data-small></div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="wrap"><h3 class="ack" data-i18n="ackH">Acknowledgements</h3><p data-i18n="ackP">Thank you to 爱死亡机器人 for the original tutorial on Zhihu, which has helped many people learn to solve the 3×3. This page follows its layer-by-layer method, step order and formulas. The wording, 3D illustrations, white-cross guide and English version were made for this page.</p><p data-i18n="t75">Source: 爱死亡机器人, <a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>“三阶魔方还原公式”</a>, Zhihu, 2021.</p></footer>
+
+<script>
+const I18N={en:{"t0": "Solving the 3×3 cube, layer by layer", "t1": "Drag any cube to rotate it. Double-click to reset.", "t2": "Reading the formulas", "t3": "Each letter names a face. Turn it a quarter turn <strong>clockwise as if you were looking straight at that face</strong>. Keep white on the bottom and yellow on top; “front” faces you.", "t4": "clockwise quarter turn", "t5": "prime: counter-clockwise", "t6": "half turn (either way)", "t7": "Bottom cross", "t8": "底棱归位 · white cross", "t9": "Target", "t10": "White cross on the bottom. Each white edge's side color matches the center above it.", "t11": "Part 1: make a daisy", "t12": "Daisy", "t13": "Keep yellow on top. Bring all four white edges up around the yellow center, white facing up. Their other colors don't matter yet.", "t14": "<strong>Before every move:</strong> turn the top (U) until the top spot where the piece will land is empty, so you don't knock off a petal you already placed.", "t15": "Middle layer, right side, white facing front", "t16": "Middle layer, left side, white facing front", "t17": "Middle layer, right side, white facing right", "t18": "Middle layer, left side, white facing left", "t19": "Bottom layer, white facing down", "t20": "Bottom layer, white facing front", "t21": "Top layer, white facing front", "t22": "Part 2: turn the daisy into the cross", "t23": "Turn the top (U) until a petal's side color matches the center below it. Hold that side as the front, then:", "t24": "The white edge drops to the bottom. Do the same for all four petals, turning the whole cube (yellow stays on top) to bring each one to the front.", "t25": "Bottom corners", "t26": "底角归位 · finish the first layer", "t27": "Bottom layer complete. The white face is solved and the bottom row of every side matches its center.", "t28": "Find a corner with a white sticker in the top layer. Turn the top until that corner sits directly above the spot it belongs in (between its two colored centers), and hold the cube so that spot is at the <strong>front-right-bottom</strong>. Then pick the case:", "t29": "White faces right", "t30": "White faces front", "t31": "White faces up", "t32": "Already in the slot, but twisted (white on right side)", "t33": "Already in the slot, but twisted (white on front side)", "t34": "Middle edges", "t35": "中棱归位 · second layer", "t36": "First two layers complete. Only the top layer is left.", "t37": "Find a top-layer edge with <strong>no yellow</strong> on it. Hold the cube so the edge's empty home slot is the <strong>front-right</strong> middle slot, then turn the top until the edge's side sticker matches a center:", "t38": "Edge sits on the right side", "t39": "Its side sticker matches the <strong>right</strong> center; its top sticker is the front color.", "t40": "Edge sits on the front side", "t41": "Its side sticker matches the <strong>front</strong> center; its top sticker is the right color.", "t42": "Edge is already in its slot, but flipped", "t43": "or", "t44": "Yellow cross", "t45": "顶棱面位 · orient the top edges", "t46": "Yellow cross on top. The top corners don't matter yet.", "t47": "Now make the four top edges show yellow on top.", "t48": "Hold the cube as shown:", "t49": "Line", "t50": "Horizontal, left to right.", "t51": "L-shape", "t52": "Pointing to the back and left.", "t53": "Dot", "t54": "Only the center is yellow.", "t55": "Yellow top", "t56": "顶角面位 · orient the top corners", "t57": "Whole top face yellow. The sides of the top layer can still be mixed up.", "t58": "Turn the top corners so the whole top face is yellow.", "t59": "Case 1", "t60": "Case 2", "t61": "Other patterns:", "t62": "Top corners into place", "t63": "顶角归位 · permute the corners", "t64": "All four top corners in their correct places. Only the top edges are left.", "t65": "Look around the sides of the top layer for two corners on the same side that share a color (“headlights”).", "t66": "Headlights found", "t67": "Turn the top so the matching pair faces <strong>you</strong> (front), then:", "t68": "No headlights anywhere", "t69": "From any angle:", "t70": "Headlights will appear; then use the case above.", "t71": "Top edges into place", "t72": "顶棱归位 · finish", "t73": "Solved. Every face is one color.", "t74": "Only the top edges are left. If one side is already fully solved, hold it at the <strong>back</strong>.", "t75": "Source: 爱死亡机器人, <a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>“三阶魔方还原公式”</a>, Zhihu, 2021.", "rail0": "1. Bottom cross", "rail1": "2. Bottom corners", "rail2": "3. Middle edges", "rail3": "4. Yellow cross", "rail4": "5. Yellow top", "rail5": "6. Top corners", "rail6": "7. Top edges", "mvF": "Front", "mvdF": "the face toward you", "mvB": "Back", "mvdB": "the face away from you", "mvR": "Right", "mvdR": "the right-hand face", "mvL": "Left", "mvdL": "the left-hand face", "mvU": "Up", "mvdU": "the top layer", "mvD": "Down", "mvdD": "the bottom layer", "mvM": "Middle", "mvdM": "the slice between L and R; turns the same way as L", "turn": "Turn", "copy": "Copy", "copied": "Copied", "title": "Solving the 3×3 Cube, Layer by Layer", "turnAria": "Turn the cube around to see the back", "ackH": "Acknowledgements", "ackP": "Thank you to 爱死亡机器人 for the original tutorial on Zhihu, which has helped many people learn to solve the 3×3. This page follows its layer-by-layer method, step order and formulas. The wording, 3D illustrations, white-cross guide and English version were made for this page."},zh:{"t0": "三阶魔方层先法还原", "t1": "拖动任意魔方可旋转查看，双击复位。", "t2": "公式怎么读", "t3": "每个字母代表一个面。把这个面<strong>正对着自己看，顺时针转 90°</strong>。全程保持白色在底、黄色在顶；“前面”就是朝向你的那一面。", "t4": "顺时针转 90°", "t5": "带撇（′）：逆时针转 90°", "t6": "转 180°（方向不限）", "t7": "底层十字", "t8": "Bottom cross · 底棱归位", "t9": "目标", "t10": "底面形成白色十字，每个白色棱块侧面的颜色都与它上方的中心块相同。", "t11": "第一部分：先做“小雏菊”", "t12": "小雏菊", "t13": "保持黄色在顶。把四个白色棱块都移到顶层，围在黄色中心块四周，白色朝上。它们另一面的颜色暂时不用管。", "t14": "<strong>每次操作前：</strong>先转顶层（U），让棱块即将到达的顶层位置空出来，免得把已经放好的“花瓣”挤掉。", "t15": "在中层右侧，白色朝前", "t16": "在中层左侧，白色朝前", "t17": "在中层右侧，白色朝右", "t18": "在中层左侧，白色朝左", "t19": "在底层，白色朝下", "t20": "在底层，白色朝前", "t21": "在顶层，白色朝前", "t22": "第二部分：把小雏菊变成底层十字", "t23": "转动顶层（U），直到某个“花瓣”侧面的颜色与它下方的中心块相同。把这一面朝向自己作为前面，然后做：", "t24": "这个白色棱块就落到了底层。四个花瓣都照此操作：每次转动整个魔方（黄色始终在顶），把下一个花瓣转到前面。", "t25": "底层角块", "t26": "Bottom corners · 底角归位", "t27": "第一层完成：白色面全部还原，四个侧面最下面一排都与各自的中心块同色。", "t28": "在顶层找一个带白色的角块。转动顶层，让它正好位于它该去的位置（它另外两种颜色对应的两个中心块之间）的上方，并拿好魔方，使这个位置在<strong>前-右-下</strong>角。然后根据情况选择：", "t29": "白色朝右", "t30": "白色朝前", "t31": "白色朝上", "t32": "已在位置上但方向不对（白色朝右）", "t33": "已在位置上但方向不对（白色朝前）", "t34": "中层棱块", "t35": "Middle edges · 中棱归位", "t36": "前两层完成，只剩顶层。", "t37": "在顶层找一个<strong>不带黄色</strong>的棱块。拿好魔方，让它要去的中层位置在<strong>前右</strong>，再转动顶层，直到棱块侧面的颜色与某个中心块相同：", "t38": "棱块在右侧", "t39": "侧面颜色与<strong>右面</strong>中心块相同，顶面颜色是前面的颜色。", "t40": "棱块在前面", "t41": "侧面颜色与<strong>前面</strong>中心块相同，顶面颜色是右面的颜色。", "t42": "棱块已在位置上但方向反了", "t43": "或", "t44": "顶层黄十字", "t45": "Yellow cross · 顶棱面位", "t46": "顶面出现黄色十字，角块暂时不用管。", "t47": "让顶层四个棱块的黄色都朝上。", "t48": "按图中的方向拿好魔方：", "t49": "一字形", "t50": "横向，从左到右。", "t51": "L 形", "t52": "两边分别指向后面和左面。", "t53": "只有中心", "t54": "顶面只有中心块是黄色。", "t55": "顶面全黄", "t56": "Yellow top · 顶角面位", "t57": "整个顶面变黄，顶层侧面的颜色还可以是乱的。", "t58": "调整顶层角块，让整个顶面都变成黄色。", "t59": "情况 1", "t60": "情况 2", "t61": "其他情况：", "t62": "顶角归位", "t63": "Top corners · 顶角归位", "t64": "四个顶角都已归位，只剩顶层棱块。", "t65": "观察顶层四个侧面，找出同一侧颜色相同的两个角块（俗称“车灯”）。", "t66": "找到车灯", "t67": "转动顶层，让这对同色角块朝向<strong>自己</strong>（前面），然后做：", "t68": "找不到车灯", "t69": "任意方向做一次：", "t70": "做完就会出现车灯，再按上面的情况处理。", "t71": "顶棱归位", "t72": "Top edges · 顶棱归位", "t73": "还原完成，每个面都是同一种颜色。", "t74": "只剩顶层棱块。如果某一面已经完全还原，就把它朝<strong>后</strong>拿好。", "t75": "来源：爱死亡机器人<a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>《三阶魔方还原公式》</a>，知乎，2021。", "rail0": "1. 底层十字", "rail1": "2. 底层角块", "rail2": "3. 中层棱块", "rail3": "4. 顶层黄十字", "rail4": "5. 顶面全黄", "rail5": "6. 顶角归位", "rail6": "7. 顶棱归位", "mvF": "前面", "mvdF": "朝向你的那一面", "mvB": "后面", "mvdB": "背对你的那一面", "mvR": "右面", "mvdR": "右手边的那一面", "mvL": "左面", "mvdL": "左手边的那一面", "mvU": "顶层", "mvdU": "最上面一层", "mvD": "底层", "mvdD": "最下面一层", "mvM": "中间层", "mvdM": "左、右两面之间的那一层，转动方向与 L 相同", "turn": "转身", "copy": "复制", "copied": "已复制", "title": "三阶魔方层先法还原", "turnAria": "把魔方转过来查看背面", "ackH": "致谢", "ackP": "感谢知乎作者爱死亡机器人撰写的原教程，它帮助了许多人学会还原三阶魔方。本页沿用了原文的层先法、步骤顺序和公式；文字说明、3D 示意图、白色十字指南以及英文版为本页重新制作。"}};
+let LANG="en";
+try{ const q=new URLSearchParams(location.search).get("lang"); const sv=localStorage.getItem("cubeLang"); LANG=(q==="zh"||q==="en")?q:(sv==="zh"?"zh":"en"); }catch(_){}
+function applyLang(l){
+  LANG=l; document.documentElement.lang = l==="zh"?"zh-CN":"en";
+  document.title=I18N[l].title;
+  document.querySelectorAll("[data-i18n]").forEach(el=>{const v=I18N[l][el.dataset.i18n]; if(v!==undefined) el.innerHTML=v;});
+  document.querySelectorAll(".turn").forEach(b=>b.setAttribute("aria-label",I18N[l].turnAria));
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===l?"true":"false"));
+  try{localStorage.setItem("cubeLang",l);}catch(_){}
+}
+const D = {"order":[[-1,1,-1,"U"],[-1,1,0,"U"],[-1,1,1,"U"],[0,1,-1,"U"],[0,1,0,"U"],[0,1,1,"U"],[1,1,-1,"U"],[1,1,0,"U"],[1,1,1,"U"],[-1,-1,-1,"D"],[-1,-1,0,"D"],[-1,-1,1,"D"],[0,-1,-1,"D"],[0,-1,0,"D"],[0,-1,1,"D"],[1,-1,-1,"D"],[1,-1,0,"D"],[1,-1,1,"D"],[-1,-1,1,"F"],[-1,0,1,"F"],[-1,1,1,"F"],[0,-1,1,"F"],[0,0,1,"F"],[0,1,1,"F"],[1,-1,1,"F"],[1,0,1,"F"],[1,1,1,"F"],[-1,-1,-1,"B"],[-1,0,-1,"B"],[-1,1,-1,"B"],[0,-1,-1,"B"],[0,0,-1,"B"],[0,1,-1,"B"],[1,-1,-1,"B"],[1,0,-1,"B"],[1,1,-1,"B"],[-1,-1,-1,"L"],[-1,-1,0,"L"],[-1,-1,1,"L"],[-1,0,-1,"L"],[-1,0,0,"L"],[-1,0,1,"L"],[-1,1,-1,"L"],[-1,1,0,"L"],[-1,1,1,"L"],[1,-1,-1,"R"],[1,-1,0,"R"],[1,-1,1,"R"],[1,0,-1,"R"],[1,0,0,"R"],[1,0,1,"R"],[1,1,-1,"R"],[1,1,0,"R"],[1,1,1,"R"]],"cases":{"b1":"XXXXYXXXRXWXWWWXWXXXXBBXXXBXXXGGXXXXXOXXOXXXXXRXXRXXXW","b2":"XXXXYXXXBXWXWWWXWXXXXBBXXXWXXXGGXXXXXOXXOXXXXXRXXRXXXR","b3":"XXXXYXXXWXWXWWWXWXXXXBBXXXRXXXGGXXXXXOXXOXXXXXRXXRXXXB","b4":"XXXXYXXXXXWXWWWXWBXXXBBXRXXXXXGGXXXXXOXXOXXXXXRWXRXXXX","b5":"XXXXYXXXXXWXWWWXWRXXXBBXWXXXXXGGXXXXXOXXOXXXXXRBXRXXXX","m1":"XXXXYXXBXWWWWWWWWWBBXBBXBXXGGXGGXGGXOOOOOOXXXRRRRRXXRX","m2":"XXXXYRXXXWWWWWWWWWBBXBBBBXXGGXGGXGGXOOOOOOXXXRRRRRXXXX","m3":"XXXXYXXXXWWWWWWWWWBBXBBXBRXGGXGGXGGXOOOOOOXXXRRRRRBXXX","line":"XYXXYXXYXWWWWWWWWWBBXBBYBBXGGXGGYGGXOOOOOOXXXRRRRRRXXX","L":"XYXYYXXXXWWWWWWWWWBBXBBYBBXGGXGGXGGXOOOOOOXXXRRRRRRXYX","dot":"XXXXYXXXXWWWWWWWWWBBXBBYBBXGGXGGYGGXOOOOOOXYXRRRRRRXYX","c51":"XYXYYYXYYWWWWWWWWWBBXBBXBBXGGYGGXGGXOOOOOOXXYRRRRRRYXX","c52":"XYXYYYXYYWWWWWWWWWBBYBBXBBXGGXGGXGGYOOOOOOYXXRRRRRRXXX","c501":"XYYYYYYYXWWWWWWWWWBBXBBXBBXGGYGGXGGXOOOOOOXXXRRRRRRXXY","c502":"YYYYYYXYXWWWWWWWWWBBXBBXBBYGGXGGXGGYOOOOOOXXXRRRRRRXXX","c503":"YYXYYYYYXWWWWWWWWWBBYBBXBBYGGXGGXGGXOOOOOOXXXRRRRRRXXX","c504":"XYXYYYXYXWWWWWWWWWBBYBBXBBYGGXGGXGGXOOOOOOYXXRRRRRRYXX","c505":"XYXYYYXYXWWWWWWWWWBBYBBXBBYGGYGGXGGYOOOOOOXXXRRRRRRXXX","p6":"YYYYYYYYYWWWWWWWWWBBRBBBBBRGGGGGGGGBOOOOOOOOBRRRRRRORG","p7":"YYYYYYYYYWWWWWWWWWBBBBBRBBBGGGGGGGGGOOOOOOOBORRRRRRROR","p701":"YYYYYYYYYWWWWWWWWWBBBBBOBBBGGGGGGGGGOOOOOOORORRRRRRRBR","p702":"YYYYYYYYYWWWWWWWWWBBOBBRBBOGGRGGOGGROOOOOOGBGRRRRRRBGB","p703":"YYYYYYYYYWWWWWWWWWBBRBBGBBRGGOGGBGGOOOOOOOBOBRRRRRRGRG","s1":"XXXXYXXXXXWXWWWXWXXXXBBXXXXXXXGGXXXXXOXXOXXXXXRXXRXXXX","s2":"XXXXYXXXXWWWWWWWWWBXXBBXBXXGXXGGXGXXOOOXOXXXXRRRXRXXXX","s3":"XXXXYXXXXWWWWWWWWWBBXBBXBBXGGXGGXGGXOOOOOOXXXRRRRRRXXX","s4":"XYXYYYXYXWWWWWWWWWBBXBBXBBXGGXGGXGGXOOOOOOXXXRRRRRRXXX","s5":"YYYYYYYYYWWWWWWWWWBBXBBXBBXGGXGGXGGXOOOOOOXXXRRRRRRXXX","s6":"YYYYYYYYYWWWWWWWWWBBBBBXBBBGGGGGXGGGOOOOOOOXORRRRRRRXR","s7":"YYYYYYYYYWWWWWWWWWBBBBBBBBBGGGGGGGGGOOOOOOOOORRRRRRRRR","d1":"XXXXYXXXXXXXXWXXXXXXXXBXXWXXXXXGXXXXXXXXOXXXXXXXXRRXXX","d2":"XXXXYXXXXXXXXWXXXXXWXXBXXXXXXXXGXXXXXXXXOOXXXXXXXRXXXX","d3":"XXXXYXXXXXXXXWXXXXXXXXBXXBXXXXXGXXXXXXXXOXXXXXXXXRWXXX","d4":"XXXXYXXXXXXXXWXXXXXBXXBXXXXXXXXGXXXXXXXXOWXXXXXXXRXXXX","d5":"XXXXYXXXXXXXXWWXXXXXXBBXXXXXXXXGXXXXXXXXOXXXXXXXXRXXXX","d6":"XXXXYXXXXXXXXWOXXXXXXWBXXXXXXXXGXXXXXXXXOXXXXXXXXRXXXX","d7":"XXXXYRXXXXXXXWXXXXXXXXBWXXXXXXXGXXXXXXXXOXXXXXXXXRXXXX","daisy":"XWXWYWXWXXXXXWXXXXXXXXBBXXXXXXXGGXXXXXXXOXXOXXXXXRXXRX","flip":"XXXXYWXXXXXXXWXXXXXXXXBBXXXXXXXGXXXXXXXXOXXXXXXXXRXXXX"}};
+const AX={R:[1,0,0],L:[-1,0,0],U:[0,1,0],D:[0,-1,0],F:[0,0,1],B:[0,0,-1]};
+const LIGHT=(()=>{const v=[-0.35,0.85,0.55],m=Math.hypot(...v);return v.map(a=>a/m);})();
+const RM=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function tangents(n){ if(n[0]) return [[0,0,1],[0,1,0]]; if(n[1]) return [[1,0,0],[0,0,1]]; return [[1,0,0],[0,1,0]]; }
+function rot(p,ay,ax){ let [x,y,z]=p; let c=Math.cos(ay),s=Math.sin(ay); [x,z]=[x*c+z*s,-x*s+z*c];
+  c=Math.cos(ax); s=Math.sin(ax); [y,z]=[y*c-z*s,y*s+z*c]; return [x,y,z]; }
+function proj(p){ const k=40/(40-p[2]); return [p[0]*k,-p[1]*k]; }
+// rounded square outline in (u,v) space
+const RR=(()=>{const h=.44,r=.12,pts=[];const cs=[[h-r,h-r,0],[-(h-r),h-r,90],[-(h-r),-(h-r),180],[h-r,-(h-r),270]];
+  cs.forEach(([cx,cy,a0])=>{for(let i=0;i<=4;i++){const a=(a0+i*22.5)*Math.PI/180;pts.push([cx+r*Math.cos(a),cy+r*Math.sin(a)]);}});return pts;})();
+function draw(el){
+  const st=D.cases[el.dataset.case], ay=el._ay, ax=el._ax; let out="";
+  for(const f of "UDFBLR"){
+    const n=AX[f], rn=rot(n,ay,ax); if(rn[2]<=0.02) continue;
+    const [t1,t2]=tangents(n);
+    const fc=n.map(a=>a*1.5);
+    const quad=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>proj(rot([fc[0]+1.5*(a*t1[0]+b*t2[0]),fc[1]+1.5*(a*t1[1]+b*t2[1]),fc[2]+1.5*(a*t1[2]+b*t2[2])],ay,ax)));
+    const qs=quad.map(q=>q[0].toFixed(3)+","+q[1].toFixed(3)).join(" ");
+    out+='<polygon points="'+qs+'" fill="#1A1E27" stroke="#1A1E27" stroke-width=".08" stroke-linejoin="round"/>';
+    D.order.forEach((o,i)=>{ if(o[3]!==f) return;
+      const c=[o[0]+n[0]*.5,o[1]+n[1]*.5,o[2]+n[2]*.5];
+      const pts=RR.map(([u,v])=>proj(rot([c[0]+u*t1[0]+v*t2[0],c[1]+u*t1[1]+v*t2[1],c[2]+u*t1[2]+v*t2[2]],ay,ax)));
+      out+='<polygon points="'+pts.map(q=>q[0].toFixed(3)+","+q[1].toFixed(3)).join(" ")+'" fill="var(--'+st[i]+')"/>';
+    });
+    const lam=Math.max(0,rn[0]*LIGHT[0]+rn[1]*LIGHT[1]+rn[2]*LIGHT[2]);
+    const fill=Math.max(0,-rn[1])*0.7; const shade=(1-Math.min(1,0.55+0.45*lam+fill))*0.7;
+    if(shade>0.01) out+='<polygon points="'+qs+'" fill="#000" opacity="'+shade.toFixed(3)+'"/>';
+  }
+  el._svg.innerHTML=out;
+}
+
+/* ---------- Move icons: a cube with the turning layer lit and an arrow ---------- */
+const ICON_CACHE={};
+const SLICE={U:[1,1],D:[1,-1],R:[0,1],L:[0,-1],F:[2,1],B:[2,-1],M:[0,0]};
+function cross(a,b){return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];}
+function moveIcon(tok){
+  if(ICON_CACHE[tok]) return ICON_CACHE[tok];
+  const base=tok[0], mod=tok.slice(1), ay=-0.62, ax=0.52;
+  const [axis,k]=SLICE[base];
+  const tangentsI=n=>n[0]?[[0,0,1],[0,1,0]]:n[1]?[[1,0,0],[0,0,1]]:[[1,0,0],[0,1,0]];
+  let out="";
+  for(const f of "UDFBLR"){
+    const n=AX[f], rn=rot(n,ay,ax); if(rn[2]<=0.02) continue;
+    const [t1,t2]=tangentsI(n), fc=n.map(a=>a*1.5);
+    const quad=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>proj(rot([fc[0]+1.5*(a*t1[0]+b*t2[0]),fc[1]+1.5*(a*t1[1]+b*t2[1]),fc[2]+1.5*(a*t1[2]+b*t2[2])],ay,ax)));
+    const qs=quad.map(q=>q[0].toFixed(2)+","+q[1].toFixed(2)).join(" ");
+    out+='<polygon points="'+qs+'" fill="#1A1E27" stroke="#1A1E27" stroke-width=".1" stroke-linejoin="round"/>';
+    for(let a=-1;a<=1;a++)for(let b=-1;b<=1;b++){
+      const c=[fc[0]+a*t1[0]+b*t2[0],fc[1]+a*t1[1]+b*t2[1],fc[2]+a*t1[2]+b*t2[2]];
+      const cub=c.map((v,i)=>n[i]?v-n[i]*.5:v);
+      const lit=Math.round(cub[axis])===k;
+      const pts=RR.map(([u,v])=>proj(rot([c[0]+u*t1[0]+v*t2[0],c[1]+u*t1[1]+v*t2[1],c[2]+u*t1[2]+v*t2[2]],ay,ax)));
+      out+='<polygon points="'+pts.map(q=>q[0].toFixed(2)+","+q[1].toFixed(2)).join(" ")+'" fill="'+(lit?'var(--lit)':'var(--dim)')+'"/>';
+    }
+    const lam=Math.max(0,rn[0]*LIGHT[0]+rn[1]*LIGHT[1]+rn[2]*LIGHT[2]), sh=(1-(0.5+0.5*lam))*0.6;
+    if(sh>0.01) out+='<polygon points="'+qs+'" fill="#000" opacity="'+sh.toFixed(3)+'"/>';
+  }
+  // one straight arrow per quarter turn: U' = one arrow, U2 = two arrows on two faces
+  const e=1.6, m=1.22, f2=v=>v.map(x=>x.toFixed(2)).join(",");
+  const FACES = axis===0 ? ["F","U"] : axis===1 ? ["F","R"] : ["U","R"];
+  const segs = {
+    "0F":[[k,-m,e],[k,m,e]], "0U":[[k,e,m],[k,e,-m]],
+    "1F":[[-m,k,e],[m,k,e]], "1R":[[e,k,m],[e,k,-m]],
+    "2U":[[-m,e,k],[m,e,k]], "2R":[[e,m,k],[e,-m,k]]
+  };
+  const nf = base==="M" ? AX.L : AX[base];
+  let w=nf.map(v=>-v); if(mod==="'") w=w.map(v=>-v);
+  const col = mod==="'" ? "var(--R)" : mod==="2" ? "var(--B)" : "var(--arrow)";
+  FACES.slice(0, mod==="2" ? 2 : 1).forEach(fn=>{
+    let [p0,p1]=segs[axis+fn].map(q=>q.slice());
+    const mid=[(p0[0]+p1[0])/2,(p0[1]+p1[1])/2,(p0[2]+p1[2])/2];
+    const vel=cross(w,mid), tan=[p1[0]-p0[0],p1[1]-p0[1],p1[2]-p0[2]];
+    if(vel[0]*tan[0]+vel[1]*tan[1]+vel[2]*tan[2]<0) [p0,p1]=[p1,p0];
+    const a0=proj(rot(p0,ay,ax)), a1=proj(rot(p1,ay,ax));
+    const dx=a1[0]-a0[0], dy=a1[1]-a0[1], L=Math.hypot(dx,dy)||1, ux=dx/L, uy=dy/L;
+    const hs=.62, hw=.4, base2=[a1[0]-ux*hs,a1[1]-uy*hs];
+    const tri=[a1,[base2[0]+uy*hw,base2[1]-ux*hw],[base2[0]-uy*hw,base2[1]+ux*hw]];
+    out+='<line x1="'+a0[0].toFixed(2)+'" y1="'+a0[1].toFixed(2)+'" x2="'+base2[0].toFixed(2)+'" y2="'+base2[1].toFixed(2)+'" stroke="var(--panel)" stroke-width=".5" stroke-linecap="round"/>';
+    out+='<polygon points="'+tri.map(f2).join(" ")+'" fill="var(--panel)" stroke="var(--panel)" stroke-width=".22" stroke-linejoin="round"/>';
+    out+='<line x1="'+a0[0].toFixed(2)+'" y1="'+a0[1].toFixed(2)+'" x2="'+base2[0].toFixed(2)+'" y2="'+base2[1].toFixed(2)+'" stroke="'+col+'" stroke-width=".24" stroke-linecap="round"/>';
+    out+='<polygon points="'+tri.map(f2).join(" ")+'" fill="'+col+'"/>';
+  });
+  const svg='<svg class="mi" viewBox="-2.6 -2.6 5.2 5.2" aria-hidden="true">'+out+'</svg>';
+  return ICON_CACHE[tok]=svg;
+}
+
+const NAMES=["Bottom cross","Bottom corners","Middle edges","Yellow cross","Yellow top","Top corners","Top edges"];
+const rail=document.getElementById("rail");
+NAMES.forEach((nm,i)=>{const li=document.createElement("li");
+  li.innerHTML='<a href="#s'+(i+1)+'"><div class="c3" data-case="s'+(i+1)+'" data-tilt="30"></div><span data-i18n="rail'+i+'">'+(i+1)+'. '+nm+'</span></a>'; rail.appendChild(li);});
+
+const MOVES=[["F","Front","the face toward you"],["B","Back","the face away from you"],["R","Right","the right-hand face"],["L","Left","the left-hand face"],["U","Up","the top layer"],["D","Down","the bottom layer"],["M","Middle","the slice between L and R; turns the same way as L"]];
+document.getElementById("moveList").innerHTML=MOVES.map(m=>'<div class="move"><span class="mv">'+moveIcon(m[0])+'<span class="k">'+m[0]+'</span></span><div><b data-i18n="mv'+m[0]+'">'+m[1]+'</b><span data-i18n="mvd'+m[0]+'">'+m[2]+'</span></div></div>').join("");
+
+function cap(tok,small){
+  const base=tok[0], mod=tok.slice(1);
+  const cls="k"+(small?" sm":"")+(mod==="2"?" two":"");
+  return '<span class="mv">'+moveIcon(tok)+'<span class="'+cls+'" role="img" aria-label="'+tok+'">'+base+(mod?'<sup>'+(mod==="'"?"′":mod)+'</sup>':'')+'</span></span>';
+}
+document.querySelectorAll('[data-mod]').forEach(d=>d.insertAdjacentHTML('afterbegin',cap(d.dataset.mod)));
+document.querySelectorAll(".alg").forEach(el=>{
+  const src=el.dataset.alg, small=el.hasAttribute("data-small");
+  const parts=[]; const re=/\(([^)]*)\)|([^\s()]+)/g; let m;
+  while((m=re.exec(src))){ if(m[1]!==undefined) parts.push({g:true,t:m[1].trim().split(/\s+/)}); else parts.push({g:false,t:[m[2]]}); }
+  let html;
+  if(parts.some(p=>p.g)) html=parts.map(p=>'<span class="grp'+(p.g?'':' solo')+'">'+p.t.map(t=>cap(t,small)).join("")+'</span>').join("");
+  else html='<span class="grp solo">'+parts.map(p=>cap(p.t[0],small)).join("")+'</span>';
+  const plain=src.replace(/[()]/g,"").replace(/\s+/g," ").trim();
+  el.innerHTML=html+'<button class="copy" type="button" data-i18n="copy">'+I18N[LANG].copy+'</button>';
+  el.setAttribute("aria-label","Formula: "+plain);
+  el.querySelector(".copy").addEventListener("click",async e=>{
+    try{await navigator.clipboard.writeText(plain); e.target.textContent=I18N[LANG].copied;}
+    catch(_){e.target.textContent=plain;}
+    setTimeout(()=>e.target.textContent=I18N[LANG].copy,1600);
+  });
+});
+
+const AY0=-0.62;
+document.querySelectorAll(".c3").forEach(el=>{
+  const tilt=(+el.dataset.tilt||30)*Math.PI/180;
+  const ay0=el.dataset.ay?(+el.dataset.ay)*Math.PI/180:AY0;
+  el._ay=ay0; el._ax=tilt; el._home=[ay0,tilt];
+  el.innerHTML='<svg viewBox="-2.55 -2.55 5.1 5.1" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="3D view of the cube for this case"></svg>';
+  el._svg=el.firstChild; draw(el);
+  if(el.closest(".rail")) return;
+  let drag=null;
+  el.addEventListener("pointerdown",e=>{ if(e.target.closest(".turn")) return; drag=[e.clientX,e.clientY]; el.setPointerCapture(e.pointerId); });
+  el.addEventListener("pointermove",e=>{ if(!drag) return; const w=el.clientWidth||150;
+    el._ay+=(e.clientX-drag[0])/w*3; el._ax=Math.max(-1.45,Math.min(1.45,el._ax+(e.clientY-drag[1])/w*3));
+    drag=[e.clientX,e.clientY]; draw(el); });
+  const end=()=>drag=null; el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
+  el.addEventListener("dblclick",()=>{el._ay=el._home[0];el._ax=el._home[1];draw(el);});
+  if(!el.classList.contains("hero3")){
+    const b=document.createElement("button"); b.className="turn"; b.type="button"; b.textContent=I18N[LANG].turn; b.setAttribute("data-i18n","turn"); b.setAttribute("aria-label",I18N[LANG].turnAria);
+    b.addEventListener("click",()=>{ const from=el._ay,to=from+Math.PI;
+      if(RM){el._ay=to;draw(el);return;}
+      const t0=performance.now(); const step=t=>{const k=Math.min(1,(t-t0)/550),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; el._ay=from+(to-from)*e; draw(el); if(k<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
+    el.appendChild(b);
+  }
+});
+
+/* ---------- Rail highlight ---------- */
+const links=[...rail.querySelectorAll("a")];
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}})},{rootMargin:"-40% 0px -55% 0px"});
+for(let i=1;i<=7;i++) obs.observe(document.getElementById("s"+i));
+document.querySelectorAll(".lang button").forEach(b=>b.addEventListener("click",()=>applyLang(b.dataset.lang)));
+applyLang(LANG);
+</script>
+</body>
+</html>
