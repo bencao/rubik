@@ -52,13 +52,15 @@ a{color:inherit}
 
 /* Stage rail */
 .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
-.rail ol{list-style:none;margin:0 auto;padding:8px 20px;max-width:960px;display:flex;gap:6px;overflow-x:auto}
+.rail .in{max-width:960px;margin:0 auto;display:flex;align-items:center;gap:8px;padding-right:20px}
+.rail ol{list-style:none;margin:0;padding:8px 20px;flex:1;min-width:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;scroll-padding-inline:20px}
+.rail ol::-webkit-scrollbar{display:none}
 .rail a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;min-width:84px;padding:6px 4px;border-radius:10px;font-size:.78rem;color:var(--muted);text-align:center;line-height:1.2}
 .rail a:hover{background:var(--panel);color:var(--ink)}
 .rail a.on{background:var(--panel);color:var(--ink);font-weight:700}
 
 /* Sections */
-section{padding:44px 0 8px}
+section{padding:44px 0 8px;scroll-margin-top:92px}
 h2{font-family:var(--display);font-weight:700;font-size:clamp(1.6rem,3.6vw,2.2rem);letter-spacing:-.015em;line-height:1.1;margin:0 0 12px}
 h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
 .lead{max-width:40em;margin:0 0 20px}
@@ -84,7 +86,7 @@ h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
 .k sup{font-size:.95rem;font-weight:800;margin-left:1px;align-self:flex-start;margin-top:.35em;line-height:1;color:var(--R)}
 .k.two sup{color:var(--B)}
 .k.sm{min-width:34px;height:38px;font-size:1.1rem}
-.copy{font:inherit;font-size:.85rem;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;margin-left:2px;align-self:center}
+.copy{font:inherit;font-size:.85rem;color:var(--muted);background:none;border:1px solid var(--line);border-radius:8px;padding:4px 10px;cursor:pointer;margin-left:2px;align-self:flex-end;margin-bottom:10px}
 .copy:hover{color:var(--ink);border-color:var(--ink)}
 
 /* Case cards */
@@ -101,7 +103,8 @@ h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
 .combo .k{min-width:auto}
 .chip{display:inline-block;font-weight:700;font-size:.9rem;padding:2px 10px;border-radius:999px;background:var(--bg);border:1px solid var(--line)}
 
-.c3{width:100%;max-width:210px;aspect-ratio:1;margin:0 auto 6px;position:relative;touch-action:none;cursor:grab;user-select:none}
+.c3{width:100%;max-width:210px;aspect-ratio:1;margin:0 auto 6px;position:relative;touch-action:pan-y pinch-zoom;cursor:grab;user-select:none;border-radius:16px;transition:box-shadow .15s}
+.c3.spin{touch-action:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--B) 45%,transparent)}
 .c3:active{cursor:grabbing}
 .c3 svg{width:100%;height:100%;display:block;overflow:visible}
 .case .row .c3{width:100%;margin:0 auto 6px}
@@ -109,10 +112,21 @@ h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
 .case.wide > .c3{margin-left:0}
 .hero3{max-width:320px}
 .hint{text-align:center;font-size:.85rem;color:var(--muted);margin:4px 0 0}
-.turn{position:absolute;right:-4px;bottom:-4px;font:inherit;font-size:.78rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer}
-.turn:hover{color:var(--ink);border-color:var(--ink)}
+.ctl{position:absolute;right:-4px;bottom:-4px;display:flex;gap:4px;align-items:center}
+.ctl button,.rall{font:inherit;font-size:.78rem;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px 9px;cursor:pointer;min-height:26px}
+.ctl button:hover,.rall:hover{color:var(--ink);border-color:var(--ink)}
+.ctl .ic{width:30px;height:30px;padding:0;display:grid;place-items:center}
+.ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ctl .rot{display:none}
+.ctl .rot[aria-pressed="true"]{background:var(--B);border-color:var(--B);color:#fff}
+.ctl [hidden]{display:none!important}
+@media (pointer:coarse){.ctl .rot{display:grid}.ctl .turn{min-height:30px}}
+.rall{display:inline-flex;align-items:center;gap:6px;flex:none;white-space:nowrap}
+.rall[hidden]{display:none}
+.hint .touch{display:none}
+@media (pointer:coarse){.hint .mouse{display:none}.hint .touch{display:inline}}
 .rail .c3{width:40px;max-width:40px;margin:0;cursor:inherit;pointer-events:none}
-@media (max-width:720px){.hero .cube{width:220px}}
+@media (max-width:720px){.hero .cube{width:180px}.hero .hint{text-align:left}}
 
 .mv{display:inline-flex;flex-direction:column;align-items:center;gap:4px}
 .mv svg.mi{width:58px;height:58px;display:block}
@@ -123,6 +137,11 @@ h3{font-family:var(--display);font-weight:700;font-size:1.15rem;margin:0 0 6px}
 .combo{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
 .combo .case{align-items:stretch;text-align:left}
 .combo .alg,.case .alg{justify-content:flex-start}
+.list{grid-template-columns:1fr}
+.list .case,.list .case .row{display:grid;grid-template-columns:180px 1fr;gap:6px 24px;align-items:center;text-align:left}
+.list .case .row{grid-column:1/-1}
+.list .c3{max-width:180px;margin:0}
+@media (max-width:640px){.list .case,.list .case .row{grid-template-columns:1fr}.list .c3{max-width:200px;margin:0 auto 6px}}
 p.or{margin:6px 0 2px;color:var(--muted);font-size:.9rem}
 
 .goal{display:flex;gap:20px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--G);border-radius:14px;padding:14px 18px;margin:4px 0 22px;max-width:640px}
@@ -155,12 +174,12 @@ footer p{max-width:44em}
       <div class="lang" role="group" aria-label="Language / 语言"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="zh" aria-pressed="false">中文</button></div>
       <h1 data-i18n="t0">Solving the 3×3 cube, layer by layer</h1>
     </div>
-    <div class="cube"><div class="c3 hero3" data-case="s7" data-tilt="30"></div><p class="hint" data-i18n="t1">Drag any cube to rotate it. Double-click to reset.</p></div>
+    <div class="cube"><div class="c3 hero3" data-case="s7" data-tilt="30"></div><p class="hint"><span class="mouse" data-i18n="t1">Drag any cube to rotate it.</span><span class="touch" data-i18n="t1t">Tap the rotate button on a cube, then drag to turn it.</span></p></div>
   </header>
 </div>
 
 <nav class="rail" aria-label="Stages">
-  <ol id="rail"></ol>
+  <div class="in"><ol id="rail"></ol><button type="button" class="rall" id="resetAll" hidden><span class="ic" aria-hidden="true"></span><span data-i18n="resetAll">Reset all</span></button></div>
 </nav>
 
 <main class="wrap">
@@ -228,7 +247,7 @@ footer p{max-width:44em}
   <p class="lead" data-i18n="t47">Now make the four top edges show yellow on top.</p>
   <div class="alg" data-alg="F (R U R' U') F'"></div>
   <p class="lead" style="margin-top:14px" data-i18n="t48">Hold the cube as shown:</p>
-  <div class="cases">
+  <div class="cases list">
     <div class="case"><div class="row"><div class="c3" data-case="line" data-tilt="40"></div><div><h3 data-i18n="t49">Line</h3><p data-i18n="t50">Horizontal, left to right.</p><div class="alg" data-alg="(F R U R' U' F')" data-small></div></div></div></div>
     <div class="case"><div class="row"><div class="c3" data-case="L" data-tilt="40"></div><div><h3 data-i18n="t51">L-shape</h3><p data-i18n="t52">Pointing to the back and left.</p><div class="alg" data-alg="(F R U R' U' F') (F R U R' U' F')" data-small></div></div></div></div>
     <div class="case"><div class="row"><div class="c3" data-case="dot" data-tilt="40"></div><div><h3 data-i18n="t53">Dot</h3><p data-i18n="t54">Only the center is yellow.</p><div class="alg" data-alg="(F R U R' U' F') (F R U R' U' F') U (F R U R' U' F')" data-small></div></div></div></div>
@@ -244,7 +263,7 @@ footer p{max-width:44em}
     <div class="case"><div class="row"><div class="c3" data-case="c52" data-tilt="40"></div><div><h3 data-i18n="t60">Case 2</h3><div class="alg" data-alg="U' R U2 R' U' R U' R'" data-small></div></div></div></div>
   </div>
   <p class="lead" style="margin-top:22px" data-i18n="t61">Other patterns:</p>
-  <div class="combo">
+  <div class="combo list">
     <div class="case"><div class="c3" data-case="c501" data-tilt="40"></div><div class="alg" data-alg="(R' U2 R U R' U R) (U' R U2 R' U' R U' R')" data-small></div></div>
     <div class="case"><div class="c3" data-case="c502" data-tilt="40"></div><div class="alg" data-alg="(U' R U2 R' U' R U' R') (R' U2 R U R' U R)" data-small></div></div>
     <div class="case"><div class="c3" data-case="c503" data-tilt="40"></div><div class="alg" data-alg="(U' R U2 R' U' R U' R') U2 (R' U2 R U R' U R)" data-small></div></div>
@@ -267,7 +286,7 @@ footer p{max-width:44em}
   <div class="stephead"><div class="num">7</div><div><h2 data-i18n="t71">Top edges into place</h2><p class="zh" data-i18n="t72">顶棱归位 · finish</p></div></div>
   <div class="goal"><div class="c3" data-case="s7" data-tilt="30"></div><div><h3 data-i18n="t9">Target</h3><p data-i18n="t73">Solved. Every face is one color.</p></div></div>
   <p class="lead" data-i18n="t74">Only the top edges are left. If one side is already fully solved, hold it at the <strong>back</strong>.</p>
-  <div class="combo" style="margin-top:18px">
+  <div class="combo list" style="margin-top:18px">
     <div class="case"><div class="c3" data-case="p7" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2)" data-small></div></div>
     <div class="case"><div class="c3" data-case="p701" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2) (R U' R U R U R U' R' U' R2)" data-small></div></div>
     <div class="case"><div class="c3" data-case="p702" data-tilt="40"></div><div class="alg" data-alg="(R U' R U R U R U' R' U' R2) U (R U' R U R U R U' R' U' R2)" data-small></div></div>
@@ -280,14 +299,14 @@ footer p{max-width:44em}
 <footer class="wrap"><h3 class="ack" data-i18n="ackH">Acknowledgements</h3><p data-i18n="ackP">Thank you to 爱死亡机器人 for the original tutorial on Zhihu, which has helped many people learn to solve the 3×3. This page follows its layer-by-layer method, step order and formulas. The wording, 3D illustrations, white-cross guide and English version were made for this page.</p><p data-i18n="t75">Source: 爱死亡机器人, <a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>“三阶魔方还原公式”</a>, Zhihu, 2021.</p></footer>
 
 <script>
-const I18N={en:{"t0": "Solving the 3×3 cube, layer by layer", "t1": "Drag any cube to rotate it. Double-click to reset.", "t2": "Reading the formulas", "t3": "Each letter names a face. Turn it a quarter turn <strong>clockwise as if you were looking straight at that face</strong>. Keep white on the bottom and yellow on top; “front” faces you.", "t4": "clockwise quarter turn", "t5": "prime: counter-clockwise", "t6": "half turn (either way)", "t7": "Bottom cross", "t8": "底棱归位 · white cross", "t9": "Target", "t10": "White cross on the bottom. Each white edge's side color matches the center above it.", "t11": "Part 1: make a daisy", "t12": "Daisy", "t13": "Keep yellow on top. Bring all four white edges up around the yellow center, white facing up. Their other colors don't matter yet.", "t14": "<strong>Before every move:</strong> turn the top (U) until the top spot where the piece will land is empty, so you don't knock off a petal you already placed.", "t15": "Middle layer, right side, white facing front", "t16": "Middle layer, left side, white facing front", "t17": "Middle layer, right side, white facing right", "t18": "Middle layer, left side, white facing left", "t19": "Bottom layer, white facing down", "t20": "Bottom layer, white facing front", "t21": "Top layer, white facing front", "t22": "Part 2: turn the daisy into the cross", "t23": "Turn the top (U) until a petal's side color matches the center below it. Hold that side as the front, then:", "t24": "The white edge drops to the bottom. Do the same for all four petals, turning the whole cube (yellow stays on top) to bring each one to the front.", "t25": "Bottom corners", "t26": "底角归位 · finish the first layer", "t27": "Bottom layer complete. The white face is solved and the bottom row of every side matches its center.", "t28": "Find a corner with a white sticker in the top layer. Turn the top until that corner sits directly above the spot it belongs in (between its two colored centers), and hold the cube so that spot is at the <strong>front-right-bottom</strong>. Then pick the case:", "t29": "White faces right", "t30": "White faces front", "t31": "White faces up", "t32": "Already in the slot, but twisted (white on right side)", "t33": "Already in the slot, but twisted (white on front side)", "t34": "Middle edges", "t35": "中棱归位 · second layer", "t36": "First two layers complete. Only the top layer is left.", "t37": "Find a top-layer edge with <strong>no yellow</strong> on it. Hold the cube so the edge's empty home slot is the <strong>front-right</strong> middle slot, then turn the top until the edge's side sticker matches a center:", "t38": "Edge sits on the right side", "t39": "Its side sticker matches the <strong>right</strong> center; its top sticker is the front color.", "t40": "Edge sits on the front side", "t41": "Its side sticker matches the <strong>front</strong> center; its top sticker is the right color.", "t42": "Edge is already in its slot, but flipped", "t43": "or", "t44": "Yellow cross", "t45": "顶棱面位 · orient the top edges", "t46": "Yellow cross on top. The top corners don't matter yet.", "t47": "Now make the four top edges show yellow on top.", "t48": "Hold the cube as shown:", "t49": "Line", "t50": "Horizontal, left to right.", "t51": "L-shape", "t52": "Pointing to the back and left.", "t53": "Dot", "t54": "Only the center is yellow.", "t55": "Yellow top", "t56": "顶角面位 · orient the top corners", "t57": "Whole top face yellow. The sides of the top layer can still be mixed up.", "t58": "Turn the top corners so the whole top face is yellow.", "t59": "Case 1", "t60": "Case 2", "t61": "Other patterns:", "t62": "Top corners into place", "t63": "顶角归位 · permute the corners", "t64": "All four top corners in their correct places. Only the top edges are left.", "t65": "Look around the sides of the top layer for two corners on the same side that share a color (“headlights”).", "t66": "Headlights found", "t67": "Turn the top so the matching pair faces <strong>you</strong> (front), then:", "t68": "No headlights anywhere", "t69": "From any angle:", "t70": "Headlights will appear; then use the case above.", "t71": "Top edges into place", "t72": "顶棱归位 · finish", "t73": "Solved. Every face is one color.", "t74": "Only the top edges are left. If one side is already fully solved, hold it at the <strong>back</strong>.", "t75": "Source: 爱死亡机器人, <a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>“三阶魔方还原公式”</a>, Zhihu, 2021.", "rail0": "1. Bottom cross", "rail1": "2. Bottom corners", "rail2": "3. Middle edges", "rail3": "4. Yellow cross", "rail4": "5. Yellow top", "rail5": "6. Top corners", "rail6": "7. Top edges", "mvF": "Front", "mvdF": "the face toward you", "mvB": "Back", "mvdB": "the face away from you", "mvR": "Right", "mvdR": "the right-hand face", "mvL": "Left", "mvdL": "the left-hand face", "mvU": "Up", "mvdU": "the top layer", "mvD": "Down", "mvdD": "the bottom layer", "mvM": "Middle", "mvdM": "the slice between L and R; turns the same way as L", "turn": "Turn", "copy": "Copy", "copied": "Copied", "title": "Solving the 3×3 Cube, Layer by Layer", "turnAria": "Turn the cube around to see the back", "ackH": "Acknowledgements", "ackP": "Thank you to 爱死亡机器人 for the original tutorial on Zhihu, which has helped many people learn to solve the 3×3. This page follows its layer-by-layer method, step order and formulas. The wording, 3D illustrations, white-cross guide and English version were made for this page."},zh:{"t0": "三阶魔方层先法还原", "t1": "拖动任意魔方可旋转查看，双击复位。", "t2": "公式怎么读", "t3": "每个字母代表一个面。把这个面<strong>正对着自己看，顺时针转 90°</strong>。全程保持白色在底、黄色在顶；“前面”就是朝向你的那一面。", "t4": "顺时针转 90°", "t5": "带撇（′）：逆时针转 90°", "t6": "转 180°（方向不限）", "t7": "底层十字", "t8": "Bottom cross · 底棱归位", "t9": "目标", "t10": "底面形成白色十字，每个白色棱块侧面的颜色都与它上方的中心块相同。", "t11": "第一部分：先做“小雏菊”", "t12": "小雏菊", "t13": "保持黄色在顶。把四个白色棱块都移到顶层，围在黄色中心块四周，白色朝上。它们另一面的颜色暂时不用管。", "t14": "<strong>每次操作前：</strong>先转顶层（U），让棱块即将到达的顶层位置空出来，免得把已经放好的“花瓣”挤掉。", "t15": "在中层右侧，白色朝前", "t16": "在中层左侧，白色朝前", "t17": "在中层右侧，白色朝右", "t18": "在中层左侧，白色朝左", "t19": "在底层，白色朝下", "t20": "在底层，白色朝前", "t21": "在顶层，白色朝前", "t22": "第二部分：把小雏菊变成底层十字", "t23": "转动顶层（U），直到某个“花瓣”侧面的颜色与它下方的中心块相同。把这一面朝向自己作为前面，然后做：", "t24": "这个白色棱块就落到了底层。四个花瓣都照此操作：每次转动整个魔方（黄色始终在顶），把下一个花瓣转到前面。", "t25": "底层角块", "t26": "Bottom corners · 底角归位", "t27": "第一层完成：白色面全部还原，四个侧面最下面一排都与各自的中心块同色。", "t28": "在顶层找一个带白色的角块。转动顶层，让它正好位于它该去的位置（它另外两种颜色对应的两个中心块之间）的上方，并拿好魔方，使这个位置在<strong>前-右-下</strong>角。然后根据情况选择：", "t29": "白色朝右", "t30": "白色朝前", "t31": "白色朝上", "t32": "已在位置上但方向不对（白色朝右）", "t33": "已在位置上但方向不对（白色朝前）", "t34": "中层棱块", "t35": "Middle edges · 中棱归位", "t36": "前两层完成，只剩顶层。", "t37": "在顶层找一个<strong>不带黄色</strong>的棱块。拿好魔方，让它要去的中层位置在<strong>前右</strong>，再转动顶层，直到棱块侧面的颜色与某个中心块相同：", "t38": "棱块在右侧", "t39": "侧面颜色与<strong>右面</strong>中心块相同，顶面颜色是前面的颜色。", "t40": "棱块在前面", "t41": "侧面颜色与<strong>前面</strong>中心块相同，顶面颜色是右面的颜色。", "t42": "棱块已在位置上但方向反了", "t43": "或", "t44": "顶层黄十字", "t45": "Yellow cross · 顶棱面位", "t46": "顶面出现黄色十字，角块暂时不用管。", "t47": "让顶层四个棱块的黄色都朝上。", "t48": "按图中的方向拿好魔方：", "t49": "一字形", "t50": "横向，从左到右。", "t51": "L 形", "t52": "两边分别指向后面和左面。", "t53": "只有中心", "t54": "顶面只有中心块是黄色。", "t55": "顶面全黄", "t56": "Yellow top · 顶角面位", "t57": "整个顶面变黄，顶层侧面的颜色还可以是乱的。", "t58": "调整顶层角块，让整个顶面都变成黄色。", "t59": "情况 1", "t60": "情况 2", "t61": "其他情况：", "t62": "顶角归位", "t63": "Top corners · 顶角归位", "t64": "四个顶角都已归位，只剩顶层棱块。", "t65": "观察顶层四个侧面，找出同一侧颜色相同的两个角块（俗称“车灯”）。", "t66": "找到车灯", "t67": "转动顶层，让这对同色角块朝向<strong>自己</strong>（前面），然后做：", "t68": "找不到车灯", "t69": "任意方向做一次：", "t70": "做完就会出现车灯，再按上面的情况处理。", "t71": "顶棱归位", "t72": "Top edges · 顶棱归位", "t73": "还原完成，每个面都是同一种颜色。", "t74": "只剩顶层棱块。如果某一面已经完全还原，就把它朝<strong>后</strong>拿好。", "t75": "来源：爱死亡机器人<a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>《三阶魔方还原公式》</a>，知乎，2021。", "rail0": "1. 底层十字", "rail1": "2. 底层角块", "rail2": "3. 中层棱块", "rail3": "4. 顶层黄十字", "rail4": "5. 顶面全黄", "rail5": "6. 顶角归位", "rail6": "7. 顶棱归位", "mvF": "前面", "mvdF": "朝向你的那一面", "mvB": "后面", "mvdB": "背对你的那一面", "mvR": "右面", "mvdR": "右手边的那一面", "mvL": "左面", "mvdL": "左手边的那一面", "mvU": "顶层", "mvdU": "最上面一层", "mvD": "底层", "mvdD": "最下面一层", "mvM": "中间层", "mvdM": "左、右两面之间的那一层，转动方向与 L 相同", "turn": "转身", "copy": "复制", "copied": "已复制", "title": "三阶魔方层先法还原", "turnAria": "把魔方转过来查看背面", "ackH": "致谢", "ackP": "感谢知乎作者爱死亡机器人撰写的原教程，它帮助了许多人学会还原三阶魔方。本页沿用了原文的层先法、步骤顺序和公式；文字说明、3D 示意图、白色十字指南以及英文版为本页重新制作。"}};
+const I18N={en:{"t0": "Solving the 3×3 cube, layer by layer", "t1": "Drag any cube to rotate it.", "t1t": "Tap the rotate button on a cube, then drag to turn it.", "rotAria": "Rotate this cube by dragging", "rstAria": "Reset this cube", "resetAll": "Reset all", "t2": "Reading the formulas", "t3": "Each letter names a face. Turn it a quarter turn <strong>clockwise as if you were looking straight at that face</strong>. Keep white on the bottom and yellow on top; “front” faces you.", "t4": "clockwise quarter turn", "t5": "prime: counter-clockwise", "t6": "half turn (either way)", "t7": "Bottom cross", "t8": "底棱归位 · white cross", "t9": "Target", "t10": "White cross on the bottom. Each white edge's side color matches the center above it.", "t11": "Part 1: make a daisy", "t12": "Daisy", "t13": "Keep yellow on top. Bring all four white edges up around the yellow center, white facing up. Their other colors don't matter yet.", "t14": "<strong>Before every move:</strong> turn the top (U) until the top spot where the piece will land is empty, so you don't knock off a petal you already placed.", "t15": "Middle layer, right side, white facing front", "t16": "Middle layer, left side, white facing front", "t17": "Middle layer, right side, white facing right", "t18": "Middle layer, left side, white facing left", "t19": "Bottom layer, white facing down", "t20": "Bottom layer, white facing front", "t21": "Top layer, white facing front", "t22": "Part 2: turn the daisy into the cross", "t23": "Turn the top (U) until a petal's side color matches the center below it. Hold that side as the front, then:", "t24": "The white edge drops to the bottom. Do the same for all four petals, turning the whole cube (yellow stays on top) to bring each one to the front.", "t25": "Bottom corners", "t26": "底角归位 · finish the first layer", "t27": "Bottom layer complete. The white face is solved and the bottom row of every side matches its center.", "t28": "Find a corner with a white sticker in the top layer. Turn the top until that corner sits directly above the spot it belongs in (between its two colored centers), and hold the cube so that spot is at the <strong>front-right-bottom</strong>. Then pick the case:", "t29": "White faces right", "t30": "White faces front", "t31": "White faces up", "t32": "Already in the slot, but twisted (white on right side)", "t33": "Already in the slot, but twisted (white on front side)", "t34": "Middle edges", "t35": "中棱归位 · second layer", "t36": "First two layers complete. Only the top layer is left.", "t37": "Find a top-layer edge with <strong>no yellow</strong> on it. Hold the cube so the edge's empty home slot is the <strong>front-right</strong> middle slot, then turn the top until the edge's side sticker matches a center:", "t38": "Edge sits on the right side", "t39": "Its side sticker matches the <strong>right</strong> center; its top sticker is the front color.", "t40": "Edge sits on the front side", "t41": "Its side sticker matches the <strong>front</strong> center; its top sticker is the right color.", "t42": "Edge is already in its slot, but flipped", "t43": "or", "t44": "Yellow cross", "t45": "顶棱面位 · orient the top edges", "t46": "Yellow cross on top. The top corners don't matter yet.", "t47": "Now make the four top edges show yellow on top.", "t48": "Hold the cube as shown:", "t49": "Line", "t50": "Horizontal, left to right.", "t51": "L-shape", "t52": "Pointing to the back and left.", "t53": "Dot", "t54": "Only the center is yellow.", "t55": "Yellow top", "t56": "顶角面位 · orient the top corners", "t57": "Whole top face yellow. The sides of the top layer can still be mixed up.", "t58": "Turn the top corners so the whole top face is yellow.", "t59": "Case 1", "t60": "Case 2", "t61": "Other patterns:", "t62": "Top corners into place", "t63": "顶角归位 · permute the corners", "t64": "All four top corners in their correct places. Only the top edges are left.", "t65": "Look around the sides of the top layer for two corners on the same side that share a color (“headlights”).", "t66": "Headlights found", "t67": "Turn the top so the matching pair faces <strong>you</strong> (front), then:", "t68": "No headlights anywhere", "t69": "From any angle:", "t70": "Headlights will appear; then use the case above.", "t71": "Top edges into place", "t72": "顶棱归位 · finish", "t73": "Solved. Every face is one color.", "t74": "Only the top edges are left. If one side is already fully solved, hold it at the <strong>back</strong>.", "t75": "Source: 爱死亡机器人, <a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>“三阶魔方还原公式”</a>, Zhihu, 2021.", "rail0": "1. Bottom cross", "rail1": "2. Bottom corners", "rail2": "3. Middle edges", "rail3": "4. Yellow cross", "rail4": "5. Yellow top", "rail5": "6. Top corners", "rail6": "7. Top edges", "mvF": "Front", "mvdF": "the face toward you", "mvB": "Back", "mvdB": "the face away from you", "mvR": "Right", "mvdR": "the right-hand face", "mvL": "Left", "mvdL": "the left-hand face", "mvU": "Up", "mvdU": "the top layer", "mvD": "Down", "mvdD": "the bottom layer", "mvM": "Middle", "mvdM": "the slice between L and R; turns the same way as L", "turn": "Turn", "copy": "Copy", "copied": "Copied", "title": "Solving the 3×3 Cube, Layer by Layer", "turnAria": "Turn the cube around to see the back", "ackH": "Acknowledgements", "ackP": "Thank you to 爱死亡机器人 for the original tutorial on Zhihu, which has helped many people learn to solve the 3×3. This page follows its layer-by-layer method, step order and formulas. The wording, 3D illustrations, white-cross guide and English version were made for this page."},zh:{"t0": "三阶魔方层先法还原", "t1": "拖动任意魔方可旋转查看。", "t1t": "先点魔方上的旋转按钮，再拖动即可旋转查看。", "rotAria": "拖动旋转这个魔方", "rstAria": "复位这个魔方", "resetAll": "全部复位", "t2": "公式怎么读", "t3": "每个字母代表一个面。把这个面<strong>正对着自己看，顺时针转 90°</strong>。全程保持白色在底、黄色在顶；“前面”就是朝向你的那一面。", "t4": "顺时针转 90°", "t5": "带撇（′）：逆时针转 90°", "t6": "转 180°（方向不限）", "t7": "底层十字", "t8": "Bottom cross · 底棱归位", "t9": "目标", "t10": "底面形成白色十字，每个白色棱块侧面的颜色都与它上方的中心块相同。", "t11": "第一部分：先做“小雏菊”", "t12": "小雏菊", "t13": "保持黄色在顶。把四个白色棱块都移到顶层，围在黄色中心块四周，白色朝上。它们另一面的颜色暂时不用管。", "t14": "<strong>每次操作前：</strong>先转顶层（U），让棱块即将到达的顶层位置空出来，免得把已经放好的“花瓣”挤掉。", "t15": "在中层右侧，白色朝前", "t16": "在中层左侧，白色朝前", "t17": "在中层右侧，白色朝右", "t18": "在中层左侧，白色朝左", "t19": "在底层，白色朝下", "t20": "在底层，白色朝前", "t21": "在顶层，白色朝前", "t22": "第二部分：把小雏菊变成底层十字", "t23": "转动顶层（U），直到某个“花瓣”侧面的颜色与它下方的中心块相同。把这一面朝向自己作为前面，然后做：", "t24": "这个白色棱块就落到了底层。四个花瓣都照此操作：每次转动整个魔方（黄色始终在顶），把下一个花瓣转到前面。", "t25": "底层角块", "t26": "Bottom corners · 底角归位", "t27": "第一层完成：白色面全部还原，四个侧面最下面一排都与各自的中心块同色。", "t28": "在顶层找一个带白色的角块。转动顶层，让它正好位于它该去的位置（它另外两种颜色对应的两个中心块之间）的上方，并拿好魔方，使这个位置在<strong>前-右-下</strong>角。然后根据情况选择：", "t29": "白色朝右", "t30": "白色朝前", "t31": "白色朝上", "t32": "已在位置上但方向不对（白色朝右）", "t33": "已在位置上但方向不对（白色朝前）", "t34": "中层棱块", "t35": "Middle edges · 中棱归位", "t36": "前两层完成，只剩顶层。", "t37": "在顶层找一个<strong>不带黄色</strong>的棱块。拿好魔方，让它要去的中层位置在<strong>前右</strong>，再转动顶层，直到棱块侧面的颜色与某个中心块相同：", "t38": "棱块在右侧", "t39": "侧面颜色与<strong>右面</strong>中心块相同，顶面颜色是前面的颜色。", "t40": "棱块在前面", "t41": "侧面颜色与<strong>前面</strong>中心块相同，顶面颜色是右面的颜色。", "t42": "棱块已在位置上但方向反了", "t43": "或", "t44": "顶层黄十字", "t45": "Yellow cross · 顶棱面位", "t46": "顶面出现黄色十字，角块暂时不用管。", "t47": "让顶层四个棱块的黄色都朝上。", "t48": "按图中的方向拿好魔方：", "t49": "一字形", "t50": "横向，从左到右。", "t51": "L 形", "t52": "两边分别指向后面和左面。", "t53": "只有中心", "t54": "顶面只有中心块是黄色。", "t55": "顶面全黄", "t56": "Yellow top · 顶角面位", "t57": "整个顶面变黄，顶层侧面的颜色还可以是乱的。", "t58": "调整顶层角块，让整个顶面都变成黄色。", "t59": "情况 1", "t60": "情况 2", "t61": "其他情况：", "t62": "顶角归位", "t63": "Top corners · 顶角归位", "t64": "四个顶角都已归位，只剩顶层棱块。", "t65": "观察顶层四个侧面，找出同一侧颜色相同的两个角块（俗称“车灯”）。", "t66": "找到车灯", "t67": "转动顶层，让这对同色角块朝向<strong>自己</strong>（前面），然后做：", "t68": "找不到车灯", "t69": "任意方向做一次：", "t70": "做完就会出现车灯，再按上面的情况处理。", "t71": "顶棱归位", "t72": "Top edges · 顶棱归位", "t73": "还原完成，每个面都是同一种颜色。", "t74": "只剩顶层棱块。如果某一面已经完全还原，就把它朝<strong>后</strong>拿好。", "t75": "来源：爱死亡机器人<a href='https://zhuanlan.zhihu.com/p/345339442' target='_blank' rel='noopener'>《三阶魔方还原公式》</a>，知乎，2021。", "rail0": "1. 底层十字", "rail1": "2. 底层角块", "rail2": "3. 中层棱块", "rail3": "4. 顶层黄十字", "rail4": "5. 顶面全黄", "rail5": "6. 顶角归位", "rail6": "7. 顶棱归位", "mvF": "前面", "mvdF": "朝向你的那一面", "mvB": "后面", "mvdB": "背对你的那一面", "mvR": "右面", "mvdR": "右手边的那一面", "mvL": "左面", "mvdL": "左手边的那一面", "mvU": "顶层", "mvdU": "最上面一层", "mvD": "底层", "mvdD": "最下面一层", "mvM": "中间层", "mvdM": "左、右两面之间的那一层，转动方向与 L 相同", "turn": "转身", "copy": "复制", "copied": "已复制", "title": "三阶魔方层先法还原", "turnAria": "把魔方转过来查看背面", "ackH": "致谢", "ackP": "感谢知乎作者爱死亡机器人撰写的原教程，它帮助了许多人学会还原三阶魔方。本页沿用了原文的层先法、步骤顺序和公式；文字说明、3D 示意图、白色十字指南以及英文版为本页重新制作。"}};
 let LANG="en";
 try{ const q=new URLSearchParams(location.search).get("lang"); const sv=localStorage.getItem("cubeLang"); LANG=(q==="zh"||q==="en")?q:(sv==="zh"?"zh":"en"); }catch(_){}
 function applyLang(l){
   LANG=l; document.documentElement.lang = l==="zh"?"zh-CN":"en";
   document.title=I18N[l].title;
   document.querySelectorAll("[data-i18n]").forEach(el=>{const v=I18N[l][el.dataset.i18n]; if(v!==undefined) el.innerHTML=v;});
-  document.querySelectorAll(".turn").forEach(b=>b.setAttribute("aria-label",I18N[l].turnAria));
+  document.querySelectorAll("[data-i18n-aria]").forEach(b=>{const v=I18N[l][b.dataset.i18nAria]; b.setAttribute("aria-label",v); b.title=v;});
   document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.lang===l?"true":"false"));
   try{localStorage.setItem("cubeLang",l);}catch(_){}
 }
@@ -410,6 +429,41 @@ document.querySelectorAll(".alg").forEach(el=>{
 });
 
 const AY0=-0.62;
+const ICONS={
+  rot:'<svg viewBox="0 0 24 24"><ellipse cx="12" cy="12" rx="9" ry="4"/><path d="M12 3v18"/><path d="M17 15.5l2.5 0.5-0.5 2.5"/></svg>',
+  rst:'<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>'
+};
+const resetAll=document.getElementById("resetAll");
+resetAll.querySelector(".ic").innerHTML=ICONS.rst;
+const moved=new Set();
+function ease(k){return k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;}
+function animate(el,to,ms){
+  const from=[el._ay,el._ax];
+  if(RM){[el._ay,el._ax]=to;draw(el);return;}
+  const t0=performance.now(), step=t=>{const k=Math.min(1,(t-t0)/ms),e=ease(k);
+    el._ay=from[0]+(to[0]-from[0])*e; el._ax=from[1]+(to[1]-from[1])*e; draw(el); if(k<1) requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
+function markMoved(el,on){
+  if(on) moved.add(el); else moved.delete(el);
+  if(el._rst) el._rst.hidden=!on;
+  resetAll.hidden=moved.size===0;
+}
+function setSpin(el,on){
+  el.classList.toggle("spin",on);
+  if(el._rot) el._rot.setAttribute("aria-pressed",on?"true":"false");
+}
+function resetCube(el){
+  // take the short way home, so a cube spun many times doesn't unwind every turn
+  const tau=2*Math.PI, d=((el._ay-el._home[0])%tau+tau+Math.PI)%tau-Math.PI;
+  el._ay=el._home[0]+d;
+  animate(el,el._home,450); setSpin(el,false); markMoved(el,false);
+}
+resetAll.addEventListener("click",()=>{[...moved].forEach(resetCube);});
+function iconBtn(cls,icon,aria){
+  const b=document.createElement("button"); b.type="button"; b.className="ic "+cls; b.innerHTML=icon;
+  b.dataset.i18nAria=aria; b.setAttribute("aria-label",I18N[LANG][aria]); b.title=I18N[LANG][aria]; return b;
+}
 document.querySelectorAll(".c3").forEach(el=>{
   const tilt=(+el.dataset.tilt||30)*Math.PI/180;
   const ay0=el.dataset.ay?(+el.dataset.ay)*Math.PI/180:AY0;
@@ -418,24 +472,32 @@ document.querySelectorAll(".c3").forEach(el=>{
   el._svg=el.firstChild; draw(el);
   if(el.closest(".rail")) return;
   let drag=null;
-  el.addEventListener("pointerdown",e=>{ if(e.target.closest(".turn")) return; drag=[e.clientX,e.clientY]; el.setPointerCapture(e.pointerId); });
+  // touch drags scroll the page unless this cube's rotate mode is on
+  el.addEventListener("pointerdown",e=>{ if(e.target.closest(".ctl")) return;
+    if(e.pointerType==="touch"&&!el.classList.contains("spin")) return;
+    drag=[e.clientX,e.clientY]; el.setPointerCapture(e.pointerId); });
   el.addEventListener("pointermove",e=>{ if(!drag) return; const w=el.clientWidth||150;
     el._ay+=(e.clientX-drag[0])/w*3; el._ax=Math.max(-1.45,Math.min(1.45,el._ax+(e.clientY-drag[1])/w*3));
-    drag=[e.clientX,e.clientY]; draw(el); });
+    drag=[e.clientX,e.clientY]; draw(el); markMoved(el,true); });
   const end=()=>drag=null; el.addEventListener("pointerup",end); el.addEventListener("pointercancel",end);
-  el.addEventListener("dblclick",()=>{el._ay=el._home[0];el._ax=el._home[1];draw(el);});
+  el.addEventListener("dblclick",e=>{ if(!e.target.closest(".ctl")) resetCube(el); });
+  const ctl=document.createElement("div"); ctl.className="ctl";
+  el._rot=iconBtn("rot",ICONS.rot,"rotAria"); el._rot.setAttribute("aria-pressed","false");
+  el._rot.addEventListener("click",()=>setSpin(el,!el.classList.contains("spin")));
+  el._rst=iconBtn("rst",ICONS.rst,"rstAria"); el._rst.hidden=true;
+  el._rst.addEventListener("click",()=>resetCube(el));
+  ctl.append(el._rst,el._rot);
   if(!el.classList.contains("hero3")){
-    const b=document.createElement("button"); b.className="turn"; b.type="button"; b.textContent=I18N[LANG].turn; b.setAttribute("data-i18n","turn"); b.setAttribute("aria-label",I18N[LANG].turnAria);
-    b.addEventListener("click",()=>{ const from=el._ay,to=from+Math.PI;
-      if(RM){el._ay=to;draw(el);return;}
-      const t0=performance.now(); const step=t=>{const k=Math.min(1,(t-t0)/550),e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; el._ay=from+(to-from)*e; draw(el); if(k<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
-    el.appendChild(b);
+    const b=document.createElement("button"); b.className="turn"; b.type="button"; b.textContent=I18N[LANG].turn; b.setAttribute("data-i18n","turn"); b.dataset.i18nAria="turnAria"; b.setAttribute("aria-label",I18N[LANG].turnAria);
+    b.addEventListener("click",()=>{ animate(el,[el._ay+Math.PI,el._ax],550); markMoved(el,true); });
+    ctl.append(b);
   }
+  el.appendChild(ctl);
 });
 
 /* ---------- Rail highlight ---------- */
 const links=[...rail.querySelectorAll("a")];
-const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id));}})},{rootMargin:"-40% 0px -55% 0px"});
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(a=>{const on=a.getAttribute("href")==="#"+e.target.id; a.classList.toggle("on",on); if(on) a.scrollIntoView({block:"nearest",inline:"nearest",behavior:RM?"auto":"smooth"});});}})},{rootMargin:"-40% 0px -55% 0px"});
 for(let i=1;i<=7;i++) obs.observe(document.getElementById("s"+i));
 document.querySelectorAll(".lang button").forEach(b=>b.addEventListener("click",()=>applyLang(b.dataset.lang)));
 applyLang(LANG);
