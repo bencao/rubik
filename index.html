@@ -9,7 +9,7 @@
 <title>Solving the 3×3 Cube, Layer by Layer</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
 /* Rising Company Design System — Daylight theme (https://design-system.rising.company/llms.txt) */
 :root{
@@ -18,7 +18,7 @@
   padding-bottom:env(safe-area-inset-bottom,0px);
   --bg-base:#f6f8f7; --bg-surface:#ffffff; --bg-surface-hover:#eef3f0; --bg-inset:#e8f5ee;
   --border:#dde5e0; --border-hover:#9dc4b0; --border-subtle:#e6ede9; --border-grid:#e9efeb;
-  --text-heading:#0b1a14; --text-body:#26332d; --text-muted:#43564c; --text-subtle:#4a5d54; --text-label:#52655b; --text-dim:#61746b;
+  --text-heading:#0b1a14; --text-body:#26332d; --text-muted:#43564c; --text-dim:#52655b; --text-subtle:var(--text-muted); --text-label:var(--text-dim);
   --accent:#3af0a0; --accent-hover:#22dc8c; --accent-ink:#0b7a4e; --accent-on:#08150f; --accent-wash:#0b7a4e12; --accent-line:#0b7a4e45;
   --accent-2:#2a7adf; --accent-2-ink:#1f5fbf; --danger-ink:#c02a10;
   --warning:#f5b83d; --warning-ink:#8a5a00; --warning-wash:#8a5a0012; --warning-line:#8a5a0045;
@@ -30,6 +30,7 @@
   /* Move icons: lit layer, resting layers, and the arrow ink per turn type */
   --lit:#FFFFFF; --dim:#646C7C; --arrow:var(--text-heading); --prime:var(--danger-ink); --half:var(--accent-2-ink);
   --display:"Rajdhani","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  --text:"IBM Plex Sans","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
   --mono:"Share Tech Mono","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",monospace;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
@@ -38,7 +39,7 @@ html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
   *,*::before,*::after{animation:none!important;transition:none!important}
 }
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;background:var(--bg-base);color:var(--text-body);font-family:var(--display);font-weight:500;font-size:16px;line-height:1.6;
+body{margin:0;background:var(--bg-base);color:var(--text-body);font-family:var(--text);font-weight:400;font-size:1rem;line-height:1.6;
   background-image:radial-gradient(ellipse at 50% 0,var(--chrome-glow),transparent 60%),linear-gradient(var(--chrome-grid-line) 1px,transparent 1px),linear-gradient(90deg,var(--chrome-grid-line) 1px,transparent 1px);
   background-size:100% 100%,48px 48px,48px 48px;background-attachment:fixed}
 .wrap{max-width:1080px;margin:0 auto;padding:0 48px}
@@ -52,7 +53,7 @@ strong{color:var(--text-heading);font-weight:700}
 /* Hero */
 .hero{display:grid;grid-template-columns:1.25fr 1fr;gap:32px;align-items:center;padding:64px 0 32px}
 .hero h1{font-family:var(--display);font-weight:700;font-size:clamp(36px,7vw,56px);line-height:1.1;letter-spacing:2px;text-transform:uppercase;color:var(--text-heading);margin:16px 0 0}
-.hero .lede{font-size:18px;line-height:1.5;color:var(--text-muted);margin:16px 0 0;max-width:52ch}
+.hero .lede{font-size:1.25rem;line-height:1.5;color:var(--text-muted);margin:16px 0 0;max-width:52ch}
 .hero .cube{justify-self:center;width:min(300px,80%)}
 @media (max-width:720px){.hero{grid-template-columns:1fr;padding-top:32px}.hero .cube{order:-1;width:auto;justify-self:stretch}.hero .hero3{width:180px;margin:0}}
 
@@ -62,7 +63,7 @@ strong{color:var(--text-heading);font-weight:700}
 .rail ol{list-style:none;margin:0;padding:8px 48px;flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;scroll-padding-inline:48px}
 @media (max-width:768px){.rail ol{padding:8px 24px;scroll-padding-inline:24px}}
 .rail ol::-webkit-scrollbar{display:none}
-.rail a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;min-width:88px;padding:6px 4px;border-radius:4px;border:1px solid transparent;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--text-label);text-align:center;line-height:1.3;transition:background .2s,border-color .2s,color .2s}
+.rail a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;min-width:88px;padding:6px 4px;border-radius:4px;border:1px solid transparent;font-family:var(--text);font-size:.875rem;font-weight:500;color:var(--text-muted);text-align:center;line-height:1.3;transition:background .2s,border-color .2s,color .2s}
 .rail a:hover{background:var(--bg-surface-hover);color:var(--text-heading)}
 .rail a.on{background:var(--accent-wash);border-color:var(--accent-line);color:var(--accent-ink)}
 
@@ -77,7 +78,7 @@ h3{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:1px;
 .stephead .num{margin-bottom:8px}
 .stephead .num::before{content:"// "}
 .stephead h2{margin:0 0 4px}
-.stephead .zh{font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:var(--text-subtle);margin:0}
+.stephead .zh{font-family:var(--mono);font-size:13px;letter-spacing:.1em;color:var(--text-muted);margin:0}
 
 /* Notation */
 .moves{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:8px 0 16px}
@@ -96,7 +97,8 @@ h3{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:1px;
 .k sup{font-size:16px;font-weight:700;margin-left:1px;align-self:flex-start;margin-top:.3em;line-height:1;color:var(--prime)}
 .k.two sup{color:var(--half)}
 .k.sm{min-width:34px;height:38px;font-size:19px}
-.btn{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-body);background:transparent;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.btn{font-family:var(--text);font-size:.875rem;font-weight:600;color:var(--text-body);background:transparent;border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.btn:active{transform:scale(.97);transition-duration:0s}
 .btn:hover{background:var(--bg-surface-hover);border-color:var(--border-hover);color:var(--text-heading)}
 .copy{padding:6px 12px;margin-left:2px;align-self:flex-end;margin-bottom:10px}
 
@@ -118,7 +120,7 @@ h3{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:1px;
 .combo .c3{max-width:170px}
 .case.wide > .c3{margin-left:0}
 .hero3{max-width:320px}
-.hint{text-align:center;font-family:var(--mono);font-size:12px;letter-spacing:.05em;color:var(--text-label);margin:8px 0 0;line-height:1.5}
+.hint{text-align:center;font-family:var(--text);font-size:.875rem;color:var(--text-muted);margin:8px 0 0;line-height:1.5}
 .ctl{position:absolute;right:-4px;bottom:-4px;display:flex;gap:4px;align-items:center}
 .ctl .btn{background:var(--bg-surface);padding:4px 8px;min-height:28px}
 .ctl .ic{width:30px;height:30px;padding:0;display:grid;place-items:center}
@@ -144,7 +146,7 @@ h3{font-family:var(--display);font-weight:700;font-size:20px;letter-spacing:1px;
 .list .case .row{grid-column:1/-1}
 .list .c3{max-width:180px;margin:0}
 @media (max-width:640px){.list .case,.list .case .row{grid-template-columns:1fr}.list .c3{max-width:200px;margin:0 auto 8px}}
-p.or{margin:8px 0 2px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-label)}
+p.or{margin:8px 0 2px;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim)}
 
 .goal{display:flex;gap:24px;align-items:center;border-left:2px solid var(--accent-ink);padding:16px 24px;margin:0 0 24px;max-width:680px}
 .goal .c3{width:150px;max-width:150px;flex:none;margin:0}
@@ -161,7 +163,7 @@ h3.part{font-size:22px;margin:32px 0 16px}
 @media (max-width:560px){.row2{flex-direction:column;align-items:flex-start}}
 
 .lang{display:inline-flex;border:1px solid var(--border);border-radius:4px;padding:3px;background:var(--bg-surface);margin:0 0 24px}
-.lang button{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;border:0;background:none;color:var(--text-label);padding:6px 14px;border-radius:3px;cursor:pointer;transition:background .2s,color .2s}
+.lang button{font-family:var(--text);font-size:.875rem;font-weight:500;border:0;background:none;color:var(--text-dim);padding:6px 14px;border-radius:3px;cursor:pointer;transition:background .2s,color .2s}
 .lang button:hover{color:var(--text-heading)}
 .lang button[aria-pressed="true"]{background:var(--accent);color:var(--accent-on)}
 :lang(zh) h1,:lang(zh) h2,:lang(zh) h3{letter-spacing:0}
