@@ -180,6 +180,15 @@ footer .meta{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:va
 footer .meta a{color:inherit;text-decoration:none}
 footer .meta a:hover{color:var(--accent-ink)}
 </style>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+  window.va("beforeSend", function (event) {
+    var url = new URL(event.url);
+    url.search = "";
+    url.hash = "";
+    return Object.assign({}, event, { url: url.href });
+  });
+</script>
 <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
